@@ -2,13 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define ARRAY_SIZE 600000
-#define File_Size 1200000
-
+#define ARRAY_SIZE 1200000
+#define ARTICLE_SIZE 1000
+#define STRING_SIZE 100
 #define NUM_THREADS 4
 
-char LCS[ARRAY_SIZE][50];
-char File_Contents[File_Size][1000];
+char LCS[ARRAY_SIZE][STRING_SIZE];
+char File_Contents[ARRAY_SIZE][ARTICLE_SIZE];
 
 main() {
 
@@ -54,22 +54,54 @@ int j;
   }
 }
 
-void * find_longest_substring(int id)
+void * find_longest_substring(int id)//id is 0,1,2,3
 {
-	int id2 = id +1;
-		#pragma omp private()
+	int startPos, endPos;
+	char longestSS[STRING_SIZE];
+	char substring[STRING_SIZE];
+	int i,j,x,y,maxlen,len, currPos = 0;
+		#pragma omp private(startPos, endPos, currPos, longestSS, i, j, x, y, maxlen, len)
 		{
+		startPos = id * (File_Size / NUM_THREADS);
+		endPos = startPos + (File_Size / NUM_THREADS);
+		if(id == 3)
+		{
+		   endPos--; //want to stop before currpos++ is out of bounds
+		}
 		
-		
-		
-				#pragma omp critical
+		for(currPos = startPos; currPos < endPos; currpos++)
+		{
+		for(i=0; i<strlen(File_Contents[currPos]); i++)
+		{
+			for(j=0; j<strlen(File_Contents[currPos+1]); j++)
+			{
+				if(File_Contents[id][i] == File_Contents[id2][j])
 				{
 				
-				
+					substring[0] = File_Contents[id][i];
+					len = 1;
+					x = i;
+					y = j;
+					while(File_Contents[id][++x] == File_Contents[id2][++y])
+					{
+						substring[len++] = File_Contents[id][x];
+					}
+					if(len>maxlen)
+					{
+						maxlen = len;
+						strcpy(longstSS, substring);
+					}
 				}
-
+			}
+		}
 		
+				//put substring in global array
+		#pragma omp critical
+		{
+			strcpy(LCS[currPos], longestSS);
+		}
 		
+		}
 		
 		
 		}
