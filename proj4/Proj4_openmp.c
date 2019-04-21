@@ -12,12 +12,12 @@ char File_Contents[ARRAY_SIZE][ARTICLE_SIZE];
 
 main() {
 
-	File fp = fopen ("wiki_dump.txt", "r");
+	File * fp = fopen ("wiki_dump.txt", "r");
 	
 
 	omp_set_num_threads(NUM_THREADS);
 
-	init_arrays();
+	init_arrays(fp);
 
 	#pragma omp parallel 
 	{
@@ -48,7 +48,7 @@ void print_results(int LCS[])
 {
 int j;
   					// then print out the totals
-  for ( i = 0; i < ARRAY_SIZE; i++ ) {
+  for ( int i = 0; i < ARRAY_SIZE - 1; i++ ) {
   j = i+1;
      printf(" %d & %d - %s\n", ),i,j, LCS[i]);
   }
