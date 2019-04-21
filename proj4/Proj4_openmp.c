@@ -57,13 +57,13 @@ int j;
 void * find_longest_substring(int id)//id is 0,1,2,3
 {
 	int startPos, endPos;
-	char longestSS[STRING_SIZE];
+	char local_LCS[ARRAY_SIZE/NUM_THREADS][STRING_SIZE];
 	char substring[STRING_SIZE];
 	int i,j,x,y,maxlen,len, currPos = 0;
 		#pragma omp private(startPos, endPos, currPos, longestSS, i, j, x, y, maxlen, len)
 		{
-		startPos = id * (File_Size / NUM_THREADS);
-		endPos = startPos + (File_Size / NUM_THREADS);
+		startPos = id * (ARRAY_SIZE / NUM_THREADS);
+		endPos = startPos + (ARRAY_SIZE / NUM_THREADS);
 		if(id == 3)
 		{
 		   endPos--; //want to stop before currpos++ is out of bounds
@@ -89,19 +89,22 @@ void * find_longest_substring(int id)//id is 0,1,2,3
 					if(len>maxlen)
 					{
 						maxlen = len;
-						strcpy(longstSS, substring);
+						strcpy(local_LCS[currPos], substring);
 					}
 				}
 			}
 		}
-		
+		}
 				//put substring in global array
 		#pragma omp critical
 		{
-			strcpy(LCS[currPos], longestSS);
+			for(currPos = startPos; currPos < endPos; currpos++)
+			{
+			strcpy(LCS[currPos], local_LCS[currPos]);
+			}
 		}
 		
-		}
+		
 		
 		
 		}
