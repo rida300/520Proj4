@@ -2,10 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define ARRAY_SIZE 2
-#define ARTICLE_SIZE 100
+#define ARRAY_SIZE 9
+#define ARTICLE_SIZE 1000
 #define STRING_SIZE 100
-#define NUM_THREADS 2
+#define NUM_THREADS 4
 
 char LCS[ARRAY_SIZE][STRING_SIZE];
 char File_Contents[ARRAY_SIZE][ARTICLE_SIZE];
@@ -15,7 +15,7 @@ void print_results();
 
 int main() {
 
-	FILE * fp = fopen ("testFile.txt", "r");
+	FILE * fp = fopen ("test.txt", "r");
 	
 	omp_set_num_threads(NUM_THREADS);
 
