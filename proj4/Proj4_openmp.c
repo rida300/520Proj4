@@ -9,7 +9,10 @@
 
 char LCS[ARRAY_SIZE][STRING_SIZE];
 char File_Contents[ARRAY_SIZE][ARTICLE_SIZE];
-void find_longest_substring(int id);
+void find_longest_substring(int);
+void init_array(FILE *);
+void print_results();
+
 main() {
 
 	FILE * fp = fopen ("wiki_dump.txt", "r");
@@ -74,7 +77,7 @@ void find_longest_substring(int id)//id is 0,1,2,3
 		{
 			for(j=0; j<strlen(File_Contents[currPos+1]); j++)
 			{
-				if(File_Contents[currPos][i] == File_Contents[id2][j])
+				if(File_Contents[currPos][i] == File_Contents[currPos+1][j])
 				{
 				
 					substring[0] = File_Contents[currPos][i];
