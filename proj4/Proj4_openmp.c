@@ -10,9 +10,9 @@
 char LCS[ARRAY_SIZE][STRING_SIZE];
 char File_Contents[ARRAY_SIZE][ARTICLE_SIZE];
 
-main() {
+int main() {
 
-	File * fp = fopen ("wiki_dump.txt", "r");
+	FILE * fp = fopen ("wiki_dump.txt", "r");
 	
 
 	omp_set_num_threads(NUM_THREADS);
@@ -29,7 +29,7 @@ main() {
 	printf("Main: program completed. Exiting.\n");
 }
 
-void init_array(File * fp)
+void init_array(FILE * fp)
 {
 int i = 0;
 if(fp != NULL)
@@ -59,7 +59,7 @@ void * find_longest_substring(int id)//id is 0,1,2,3
 	int startPos, endPos;
 	char local_LCS[ARRAY_SIZE/NUM_THREADS][STRING_SIZE];
 	char substring[STRING_SIZE];
-	int i,j,x,y,maxlen,len, currPos = 0;
+	int i,j,x,y,maxlen,len = 0, currPos = 0;
 		#pragma omp private(startPos, endPos, currPos, longestSS, i, j, x, y, maxlen, len)
 		{
 		startPos = id * (ARRAY_SIZE / NUM_THREADS);
@@ -75,16 +75,16 @@ void * find_longest_substring(int id)//id is 0,1,2,3
 		{
 			for(j=0; j<strlen(File_Contents[currPos+1]); j++)
 			{
-				if(File_Contents[id][i] == File_Contents[id2][j])
+				if(File_Contents[currPos][i] == File_Contents[currPos+1][j])
 				{
 				
-					substring[0] = File_Contents[id][i];
+					substring[0] = File_Contents[currPos][i];
 					len = 1;
 					x = i;
 					y = j;
-					while(File_Contents[id][++x] == File_Contents[id2][++y])
+					while(File_Contents[currPos][++x] == File_Contents[currPos+1][++y])
 					{
-						substring[len++] = File_Contents[id][x];
+						substring[len++] = File_Contents[currPos][x];
 					}
 					if(len>maxlen)
 					{
@@ -98,15 +98,12 @@ void * find_longest_substring(int id)//id is 0,1,2,3
 				//put substring in global array
 		#pragma omp critical
 		{
-			for(currPos = startPos; currPos < endPos; currpos++)
+			for(currPos = startPos; currPos < endPos; currPos++)
 			{
 			strcpy(LCS[currPos], local_LCS[currPos]);
 			}
 		}
-		
-		
-		
-		
+
 		}
 
 
