@@ -97,7 +97,7 @@ void find_longest_substring(int id)//id is 0,1,2,3
 				//put substring in global array
 		#pragma omp critical
 		{
-			for(currPos = startPos; currPos < endPos; currpos++)
+			for(currPos = startPos; currPos < endPos; currPos++)
 			{
 			strcpy(LCS[currPos], local_LCS[currPos]);
 			}
