@@ -2,30 +2,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define ARRAY_SIZE 1200000
-#define ARTICLE_SIZE 1000
+#define ARRAY_SIZE 2
+#define ARTICLE_SIZE 100
 #define STRING_SIZE 100
-#define NUM_THREADS 4
+#define NUM_THREADS 2
 
 char LCS[ARRAY_SIZE][STRING_SIZE];
 char File_Contents[ARRAY_SIZE][ARTICLE_SIZE];
-void find_longest_substring(int);
+void * find_longest_substring(int  id);
 void init_array(FILE *);
 void print_results();
 
-main() {
+int main() {
 
-	FILE * fp = fopen ("wiki_dump.txt", "r");
+	FILE * fp = fopen ("testFile.txt", "r");
 	
 	omp_set_num_threads(NUM_THREADS);
 
-	init_arrays(fp);
-
+	init_array(fp);
+//	strcpy(File_Contents[0], "This is what I am doing instead of using the stupid fopen function");
+//	strcpy(File_Contents[1], "This is how I am testing instead of using the stupid fopen function");
 	#pragma omp parallel 
 	{
 		find_longest_substring(omp_get_thread_num());
 	}
-
+//	int id = 0;
+//	find_longest_substring(&id);
 	print_results();
 
 	printf("Main: program completed. Exiting.\n");
@@ -56,15 +58,15 @@ int j;
   }
 }
 
-void find_longest_substring(int id)//id is 0,1,2,3
+void *  find_longest_substring(int  id)//id is 0,1,2,3
 {
 	int startPos, endPos;
 	char local_LCS[ARRAY_SIZE/NUM_THREADS][STRING_SIZE];
 	char substring[STRING_SIZE];
 	int i,j,x,y,maxlen,len, currPos = 0;
-		#pragma omp private(startPos, endPos, currPos, longestSS, i, j, x, y, maxlen, len)
+		#pragma omp private(id, startPos, endPos, currPos, longestSS, i, j, x, y, maxlen, len)
 		{
-		startPos = id * (ARRAY_SIZE / NUM_THREADS);
+		startPos = (id) * (ARRAY_SIZE / NUM_THREADS);
 		endPos = startPos + (ARRAY_SIZE / NUM_THREADS);
 		if(id == NUM_THREADS-1)
 		{
