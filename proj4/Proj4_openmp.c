@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define ARRAY_SIZE 4
+#define ARRAY_SIZE 5
 #define ARTICLE_SIZE 100
 #define STRING_SIZE 100
 #define NUM_THREADS 1
@@ -38,10 +38,12 @@ void init_array(FILE * fp)
 int i = 0;
 if(fp != NULL)
 {
- char line [1000]; 
-      while ( fgets ( line, sizeof line, fp ) != NULL ) 
+ char line [ARTICLE_SIZE]; 
+      while ( fgets ( line, sizeof line, fp ) != NULL && i < ARRAY_SIZE) 
       {
-		strcpy(File_Contents[i++], line);
+		if(line[strlen(line)-1] == '\n')
+			printf("im a bad boi\n");
+		strncpy(File_Contents[i++], line, strlen(line)-1);
       }
       fclose ( fp );
 	  }
@@ -60,10 +62,13 @@ int j;
 
 void *  find_longest_substring(int  id)//id is 0,1,2,3
 {
+	int tempCount = 0;
 	int startPos, endPos;
 	char local_LCS[ARRAY_SIZE/NUM_THREADS][STRING_SIZE];
 	char substring[STRING_SIZE];
 	int i,j,x,y,maxlen,len, currPos = 0;
+	int length1 = 0;
+	int length2=0;
 		//#pragma omp private(id, startPos, endPos, currPos, longestSS, i, j, x, y, maxlen, len)
 		//{
 		startPos = (id) * (ARRAY_SIZE / NUM_THREADS);
@@ -75,11 +80,14 @@ void *  find_longest_substring(int  id)//id is 0,1,2,3
 		
 		for(currPos = startPos; currPos < endPos; currPos++)
 		{
-		printf("%d", currPos);
+		//printf("%d", currPos);
 		maxlen = 0;
-		for(i=0; i<strlen(File_Contents[currPos]); i++)
+		length1 = strlen(File_Contents[currPos]);
+		length2 = strlen(File_Contents[currPos+1]);
+		printf("%d & %d\n", length1, length2);
+		for(i=0; i< length1; i++)
 		{
-			for(j=0; j<strlen(File_Contents[currPos+1]); j++)
+			for(j=0; j<length2; j++)
 			{
 				if(File_Contents[currPos][i] == File_Contents[currPos+1][j])
 				{
@@ -96,6 +104,9 @@ void *  find_longest_substring(int  id)//id is 0,1,2,3
 					{
 						maxlen = len;
 						strcpy(local_LCS[currPos], substring);
+						tempCount++;
+						printf("%d - %d - %s\n", tempCount, currPos, local_LCS[currPos]);
+						memset(substring, 0, sizeof(substring));
 					}
 				}
 			}
@@ -104,10 +115,13 @@ void *  find_longest_substring(int  id)//id is 0,1,2,3
 		}		//put substring in global array
 //		#pragma omp critical
 		//{
-			for(currPos = startPos; currPos < endPos; currPos++)
+			for(currPos = 0; currPos < endPos+1; currPos++)
 			{
+			printf("%s\n", local_LCS[currPos]); 
 			strcpy(LCS[currPos], local_LCS[currPos]);
+			printf("%s\n", LCS[currPos]);
 			}
+printf("%s", local_LCS[3]);
 //		}
 
 
