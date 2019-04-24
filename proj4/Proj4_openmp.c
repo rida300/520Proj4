@@ -5,19 +5,21 @@
 #include <string.h>
 #define ARRAY_SIZE 5
 #define ARTICLE_SIZE 100
-#define STRING_SIZE 100
+#define STRING_SIZE 15
 #define NUM_THREADS 2
 
-char LCS[ARRAY_SIZE][STRING_SIZE];
+//char LCS[ARRAY_SIZE][STRING_SIZE+1];
 char File_Contents[ARRAY_SIZE][ARTICLE_SIZE];
-void * find_longest_substring(int  id);
+void * find_longest_substring(int  id, char **);
 void init_array(FILE *);
-void print_results();
+void print_results(char **);
 
 int main() {
 
 	FILE * fp = fopen ("testFile.txt", "r");
-	
+	char * LCS[ARRAY_SIZE];
+	for(int i = 0; i<ARRAY_SIZE; i++)
+		LCS[i] = (char *)malloc(sizeof(char) * (STRING_SIZE+3));
 	omp_set_num_threads(NUM_THREADS);
 
 	init_array(fp);
@@ -25,11 +27,11 @@ int main() {
 //	strcpy(File_Contents[1], "This is how I am testing instead of using the stupid fopen function");
 	#pragma omp parallel 
 	{
-		find_longest_substring(omp_get_thread_num());
+		find_longest_substring(omp_get_thread_num(), LCS);
 	}
 //	int id = 0;
 //	find_longest_substring(&id);
-	print_results();
+	print_results(LCS);
 
 	printf("Main: program completed. Exiting.\n");
 }
@@ -50,7 +52,7 @@ if(fp != NULL)
 	
 }
 
-void print_results()
+void print_results(char ** LCS)
 {
 int j;
   					// then print out the totals
@@ -60,12 +62,12 @@ int j;
   }
 }
 
-void *  find_longest_substring(int  id)//id is 0,1,2,3
+void *  find_longest_substring(int  id, char ** LCS)//id is 0,1,2,3
 {
 	int tempCount = 0;
 	int startPos, endPos;
-	char local_LCS[ARRAY_SIZE/NUM_THREADS][STRING_SIZE];
-	char substring[STRING_SIZE];
+	char local_LCS[ARRAY_SIZE][STRING_SIZE+2];
+	char substring[STRING_SIZE+1];
 	int i,j,x,y,maxlen,len, currPos = 0;
 	int length1 = 0;
 	int length2=0;
@@ -73,10 +75,10 @@ void *  find_longest_substring(int  id)//id is 0,1,2,3
 		{
 		startPos = (id) * (ARRAY_SIZE / NUM_THREADS);
 		endPos = startPos + (ARRAY_SIZE / NUM_THREADS);
-	//	if(id == NUM_THREADS-1)
-	//	{
-	//	   endPos--; //want to stop before currpos++ is out of bounds
-	//	}
+//		if(id == NUM_THREADS-1)
+//		{
+//		   endPos--; //want to stop before currpos++ is out of bounds
+//		}
 		
 		for(currPos = startPos; currPos < endPos; currPos++)
 		{
@@ -94,20 +96,25 @@ void *  find_longest_substring(int  id)//id is 0,1,2,3
 				
 					substring[0] = File_Contents[currPos][i];
 					len = 1;
-					x = i;
-					y = j;
-					while(File_Contents[currPos][++x] == File_Contents[currPos+1][++y])
+					x = i+1;
+					y = j+1;
+					while(File_Contents[currPos][x] == File_Contents[currPos+1][y] && x < length1 && y<length2 && len < STRING_SIZE)
 					{
-						substring[len++] = File_Contents[currPos][x];
+						substring[len] = File_Contents[currPos][x];
+						len++;
+						x++;
+						y++;
 					}
 					if(len>maxlen)
 					{
 						maxlen = len;
+						substring[maxlen] = '\0';
 						strcpy(local_LCS[currPos], substring);
+						//local_LCS[currPos][maxlen] = '\0';
 						tempCount++;
 						printf("%d - %d - %s\n", tempCount, currPos, local_LCS[currPos]);
-						for(int q = 0; q < STRING_SIZE; q++){
-							substring[q] = 0;}
+						//for(int q = 0; q < STRING_SIZE; q++){
+						//	substring[q] = 0;}
 
 					}
 				}
@@ -117,13 +124,13 @@ void *  find_longest_substring(int  id)//id is 0,1,2,3
 		}		//put substring in global array
 		#pragma omp critical
 		{
-			for(currPos = 0; currPos < endPos+1; currPos++)
+			for(currPos = startPos; currPos < endPos; currPos++)
 			{
 			//printf("%s\n", local_LCS[currPos]); 
-			strcpy(LCS[currPos], local_LCS[currPos]);
-			//printf("%s\n", LCS[currPos]);
+			strcpy(LCS[currPos], local_LCS[currPos]);//, strlen(local_LCS[currPos]));
+			printf("%s\n", LCS[currPos]);
 			}
-printf("%s", local_LCS[3]);
+//printf("%s", local_LCS[3]);
 		}
 
 
