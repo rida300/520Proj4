@@ -3,10 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define ARRAY_SIZE 5
+#define ARRAY_SIZE 7
 #define ARTICLE_SIZE 100
 #define STRING_SIZE 15
-#define NUM_THREADS 2
+#define NUM_THREADS 3
 
 //char LCS[ARRAY_SIZE][STRING_SIZE+1];
 char File_Contents[ARRAY_SIZE][ARTICLE_SIZE];
@@ -66,11 +66,12 @@ void *  find_longest_substring(int  id, char ** LCS)//id is 0,1,2,3
 {
 	int tempCount = 0;
 	int startPos, endPos;
-	char local_LCS[ARRAY_SIZE][STRING_SIZE+2];
+	char local_LCS[ARRAY_SIZE/NUM_THREADS][STRING_SIZE+2];
 	char substring[STRING_SIZE+1];
 	int i,j,x,y,maxlen,len, currPos = 0;
 	int length1 = 0;
 	int length2=0;
+	int comp = 0;
 		#pragma omp private(id, startPos, endPos, currPos, local_LCS, i, j, x, y, maxlen, len, substring)
 		{
 		startPos = (id) * (ARRAY_SIZE / NUM_THREADS);
@@ -109,10 +110,10 @@ void *  find_longest_substring(int  id, char ** LCS)//id is 0,1,2,3
 					{
 						maxlen = len;
 						substring[maxlen] = '\0';
-						strcpy(local_LCS[currPos], substring);
+						strcpy(local_LCS[comp], substring);
 						//local_LCS[currPos][maxlen] = '\0';
 						tempCount++;
-						printf("%d - %d - %s\n", tempCount, currPos, local_LCS[currPos]);
+						printf("%d - %d - %s\n", tempCount, currPos, local_LCS[comp]);
 						//for(int q = 0; q < STRING_SIZE; q++){
 						//	substring[q] = 0;}
 
@@ -120,15 +121,16 @@ void *  find_longest_substring(int  id, char ** LCS)//id is 0,1,2,3
 				}
 			}
 		    }
-
+		comp++;
 		}		//put substring in global array
 		#pragma omp critical
-		{
+		{	int z = 0;
 			for(currPos = startPos; currPos < endPos; currPos++)
 			{
 			//printf("%s\n", local_LCS[currPos]); 
-			strcpy(LCS[currPos], local_LCS[currPos]);//, strlen(local_LCS[currPos]));
+			strcpy(LCS[currPos], local_LCS[z]);//, strlen(local_LCS[currPos]));
 			printf("%s\n", LCS[currPos]);
+			z++;
 			}
 //printf("%s", local_LCS[3]);
 		}
