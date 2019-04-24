@@ -3,12 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define ARRAY_SIZE 7
-#define ARTICLE_SIZE 100
+#define ARRAY_SIZE 5
+#define ARTICLE_SIZE 1000
 #define STRING_SIZE 15
-#define NUM_THREADS 3
+#define NUM_THREADS 4
 
-//char LCS[ARRAY_SIZE][STRING_SIZE+1];
 char File_Contents[ARRAY_SIZE][ARTICLE_SIZE];
 void * find_longest_substring(int  id, char **);
 void init_array(FILE *);
@@ -16,23 +15,18 @@ void print_results(char **);
 
 int main() {
 
-	FILE * fp = fopen ("testFile.txt", "r");
-	char * LCS[ARRAY_SIZE];
-	for(int i = 0; i<ARRAY_SIZE; i++)
-		LCS[i] = (char *)malloc(sizeof(char) * (STRING_SIZE+1));
+	FILE * fp = fopen ("testLorem.txt", "r");
+	char * LCS[ARRAY_SIZE-1];
+	for(int i = 0; i<ARRAY_SIZE-1; i++)
+		LCS[i] = (char *)malloc(sizeof(char) * (STRING_SIZE));
 	omp_set_num_threads(NUM_THREADS);
 
 	init_array(fp);
-//	strcpy(File_Contents[0], "This is what I am doing instead of using the stupid fopen function");
-//	strcpy(File_Contents[1], "This is how I am testing instead of using the stupid fopen function");
 	#pragma omp parallel 
 	{
 		find_longest_substring(omp_get_thread_num(), LCS);
 	}
-//	int id = 0;
-//	find_longest_substring(&id);
 	print_results(LCS);
-
 	printf("Main: program completed. Exiting.\n");
 }
 
@@ -44,7 +38,7 @@ void init_array(FILE * fp)
 		char line [ARTICLE_SIZE]; 
     		while ( fgets ( line, sizeof line, fp ) != NULL && i < ARRAY_SIZE) 
       		{
-			strncpy(File_Contents[i++], line, strlen(line)-1);
+			strncpy(File_Contents[i++], line, strlen(line));
 
       		}
       		fclose ( fp );
@@ -55,7 +49,7 @@ void init_array(FILE * fp)
 void print_results(char ** LCS)
 {
 	int j;	// then print out the totals
-	for ( int i = 0; i < ARRAY_SIZE - 1; i++ ) 
+	for ( int i = 0; i < ARRAY_SIZE-1; i++ ) 
 	{
 		j = i+1;
      		printf(" %d & %d - %s\n",i,j, LCS[i]);
@@ -64,9 +58,8 @@ void print_results(char ** LCS)
 
 void *  find_longest_substring(int  id, char ** LCS)//id is 0,1,2,3
 {
-	int tempCount = 0;
 	int startPos, endPos;
-	char local_LCS[ARRAY_SIZE/NUM_THREADS][STRING_SIZE+1];
+	char local_LCS[ARRAY_SIZE/NUM_THREADS][STRING_SIZE];
 	char substring[STRING_SIZE];
 	int i,j,x,y,maxlen,len, currPos = 0;
 	int length1 = 0;
@@ -76,20 +69,14 @@ void *  find_longest_substring(int  id, char ** LCS)//id is 0,1,2,3
 	{
 		startPos = (id) * (ARRAY_SIZE / NUM_THREADS);
 		endPos = startPos + (ARRAY_SIZE / NUM_THREADS);
-//		if(id == NUM_THREADS-1)
-//		{
-//	   		endPos--; //want to stop before currpos++ is out of bounds
-//		}
 		for(currPos = startPos; currPos < endPos; currPos++)
-			{
-			//printf("%d", currPos);
+		{
 			maxlen = 0;
 			length1 = strlen(File_Contents[currPos]);
 			length2 = strlen(File_Contents[currPos+1]);
-			printf("%d & %d\n", length1, length2);
-			for(i=0; i< length1; i++)
+			for(i=0; i<=length1; i++)
 			{
-				for(j=0; j<length2; j++)
+				for(j=0; j<=length2; j++)
 				{
 					if(File_Contents[currPos][i] == File_Contents[currPos+1][j])
 					{
@@ -107,10 +94,7 @@ void *  find_longest_substring(int  id, char ** LCS)//id is 0,1,2,3
 						if(len>maxlen)
 						{
 							maxlen = len;
-							substring[maxlen] = '\0';
 							strcpy(local_LCS[comp], substring);
-							tempCount++;
-							printf("%d - %d - %s\n", tempCount, currPos, local_LCS[comp]);
 						}
 					}
 				}
@@ -123,7 +107,6 @@ void *  find_longest_substring(int  id, char ** LCS)//id is 0,1,2,3
 			for(currPos = startPos; currPos < endPos; currPos++)
 			{ 
 				strcpy(LCS[currPos], local_LCS[z]);
-				printf("%s\n", LCS[currPos]);
 				z++;
 			}
 		}
