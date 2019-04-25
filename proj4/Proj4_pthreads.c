@@ -2,19 +2,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define ARRAY_SIZE 1200000
+#define ARRAY_SIZE 5
 #define ARTICLE_SIZE 1000
-#define STRING_SIZE 100
-#define NUM_THREADS 4
+#define STRING_SIZE 15
+#define NUM_THREADS 2
 
 pthread_mutex_t mutexsum;// mutex for LCS
 
 char LCS[ARRAY_SIZE][STRING_SIZE];
 char File_Contents[ARRAY_SIZE][ARTICLE_SIZE];
-
-main() {
-	int i, rc;
-	File * fp = fopen ("wiki_dump.txt", "r");
+void * find_longest_substring(void * id);
+void init_array(FILE *);
+void print_results();
+int main() {
+	int i= 0, rc;
+	FILE * fp = fopen ("testLorem.txt", "r");
 	pthread_t threads[NUM_THREADS];
 	pthread_attr_t attr;
 	void *status;
@@ -24,10 +26,10 @@ main() {
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-	init_arrays(fp);
+	init_array(fp);
 
 	for (i = 0; i < NUM_THREADS; i++ ) {
-	      rc = pthread_create(&threads[i], &attr, find_longest_substring, (void *)i);
+	      rc = pthread_create(&threads[i], &attr, find_longest_substring, ((void *)&i));
 	      if (rc) {
 	        printf("ERROR; return code from pthread_create() is %d\n", rc);
 		exit(-1);
@@ -52,77 +54,85 @@ main() {
 
 }
 
-void init_array(File * fp)
+void init_array(FILE * fp)
 {
 int i = 0;
 pthread_mutex_init(&mutexsum, NULL);
 
 if(fp != NULL)
 {
- char line [1000]; 
-      while ( fgets ( line, sizeof line, file ) != NULL ) 
+ char line [ARTICLE_SIZE]; 
+      while ( fgets ( line, sizeof line, fp ) != NULL && i < ARRAY_SIZE )
       {
 		strcpy(File_Contents[i++], line);
       }
-      fclose ( file );
+      fclose ( fp );
 }
 	
 }
 
-void print_results(int LCS[])
+void print_results()
 {
 int j;
   					// then print out the totals
   for ( int i = 0; i < ARRAY_SIZE - 1; i++ ) {
   j = i+1;
-     printf(" %d & %d - %s\n", ),i,j, LCS[i]);
+     printf(" %d & %d - %s\n",i,j, LCS[i]);
   }
 }
 
-void * find_longest_substring(int id)//id is 0,1,2,3
+void * find_longest_substring(void * id)//id is 0,1,2,3
 {
 	int startPos, endPos;
 	char local_LCS[ARRAY_SIZE/NUM_THREADS][STRING_SIZE];
 	char substring[STRING_SIZE];
-	int i,j,x,y,maxlen,len, currPos = 0;
-		startPos = id * (ARRAY_SIZE / NUM_THREADS);
+	int myid = *((int*)(id));
+	int i,j,x,y,maxlen,len,length1,length2, currPos = 0;
+		startPos = myid * (ARRAY_SIZE / NUM_THREADS);
 		endPos = startPos + (ARRAY_SIZE / NUM_THREADS);
-		if(id == 3)
+		printf("%d - %d\n", startPos, myid);
+		printf("%d - %d\n", endPos, myid);
+		int comp = 0;
+		for(currPos = startPos; currPos < endPos; currPos++)
 		{
-		   endPos--; //want to stop before currpos++ is out of bounds
-		}
-		
-		for(currPos = startPos; currPos < endPos; currpos++)
-		{
-		for(i=0; i<strlen(File_Contents[currPos]); i++)
-		{
-			for(j=0; j<strlen(File_Contents[currPos+1]); j++)
+			maxlen = 0;
+			length1 = strlen(File_Contents[currPos]);
+			length2 = strlen(File_Contents[currPos+1]);
+			for(i=0; i<= length1; i++)
 			{
-				if(File_Contents[id][i] == File_Contents[id2][j])
+				for(j=0; j<= length2; j++)
 				{
-				
-					substring[0] = File_Contents[id][i];
-					len = 1;
-					x = i;
-					y = j;
-					while(File_Contents[id][++x] == File_Contents[id2][++y])
+					if(File_Contents[currPos][i] == File_Contents[currPos+1][j])
 					{
-						substring[len++] = File_Contents[id][x];
-					}
-					if(len>maxlen)
-					{
-						maxlen = len;
-						strcpy(local_LCS[currPos], substring);
+						substring[0] = File_Contents[currPos][i];
+						len = 1;
+						x = i+1;
+						y = j+1;
+						while(File_Contents[currPos][x] == File_Contents[currPos+1][y] && x<=length1 && y <= length2 && len < STRING_SIZE)
+						{
+							substring[len] = File_Contents[currPos][x];
+							len++;
+							x++;
+							y++;
+						}
+						if(len>maxlen)
+						{
+							maxlen = len;
+							strcpy(local_LCS[comp], substring);
+						}
 					}
 				}
 			}
-		}
+			comp++;
 		}
 				//put substring in global array
 		pthread_mutex_lock (&mutexsum);
-			for(currPos = startPos; currPos < endPos; currpos++)
+			int z = 0;
+			for(currPos = startPos; currPos < endPos; currPos++)
 			{
-			strcpy(LCS[currPos], local_LCS[currPos]);
+			strcpy(LCS[currPos], local_LCS[z]);
+			printf("%d - %s\n", myid, LCS[currPos]);
+			z++;
 			}
 		pthread_mutex_unlock (&mutexsum);
 		pthread_exit(NULL);
