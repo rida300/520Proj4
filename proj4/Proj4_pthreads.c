@@ -88,12 +88,9 @@ void * find_longest_substring(void * id)//id is 0,1,2,3
 	char local_LCS[ARRAY_SIZE/NUM_THREADS][STRING_SIZE];
 	char substring[STRING_SIZE];
 	int myid = (intptr_t)id;
-	printf("%d\n", myid);
 	int i,j,x,y,maxlen,len,length1,length2, currPos = 0;
 		startPos = myid * (ARRAY_SIZE / NUM_THREADS);
 		endPos = startPos + (ARRAY_SIZE / NUM_THREADS);
-		//printf("%d - %d\n", startPos, myid);
-		//printf("%d - %d\n", endPos, myid);
 		int comp = 0;
 		for(currPos = startPos; currPos < endPos; currPos++)
 		{
@@ -133,7 +130,6 @@ void * find_longest_substring(void * id)//id is 0,1,2,3
 			for(currPos = startPos; currPos < endPos; currPos++)
 			{
 			strcpy(LCS[currPos], local_LCS[z]);
-		//	printf("%d - %s\n", myid, LCS[currPos]);
 			z++;
 			}
 		pthread_mutex_unlock (&mutexsum);
