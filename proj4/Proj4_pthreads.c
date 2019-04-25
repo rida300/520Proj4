@@ -2,10 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #define ARRAY_SIZE 5
 #define ARTICLE_SIZE 1000
 #define STRING_SIZE 15
-#define NUM_THREADS 2
+#define NUM_THREADS 4
 
 pthread_mutex_t mutexsum;// mutex for LCS
 
@@ -29,8 +30,8 @@ int main() {
 	init_array(fp);
 
 	for (i = 0; i < NUM_THREADS; i++ ) {
-	      rc = pthread_create(&threads[i], &attr, find_longest_substring, ((void *)&i));
-	      if (rc) {
+	      rc = pthread_create(&threads[i], &attr, find_longest_substring, (void *)(intptr_t)i);
+		if (rc) {
 	        printf("ERROR; return code from pthread_create() is %d\n", rc);
 		exit(-1);
 	      }
@@ -86,12 +87,13 @@ void * find_longest_substring(void * id)//id is 0,1,2,3
 	int startPos, endPos;
 	char local_LCS[ARRAY_SIZE/NUM_THREADS][STRING_SIZE];
 	char substring[STRING_SIZE];
-	int myid = *((int*)(id));
+	int myid = (intptr_t)id;
+	printf("%d\n", myid);
 	int i,j,x,y,maxlen,len,length1,length2, currPos = 0;
 		startPos = myid * (ARRAY_SIZE / NUM_THREADS);
 		endPos = startPos + (ARRAY_SIZE / NUM_THREADS);
-		printf("%d - %d\n", startPos, myid);
-		printf("%d - %d\n", endPos, myid);
+		//printf("%d - %d\n", startPos, myid);
+		//printf("%d - %d\n", endPos, myid);
 		int comp = 0;
 		for(currPos = startPos; currPos < endPos; currPos++)
 		{
@@ -131,7 +133,7 @@ void * find_longest_substring(void * id)//id is 0,1,2,3
 			for(currPos = startPos; currPos < endPos; currPos++)
 			{
 			strcpy(LCS[currPos], local_LCS[z]);
-			printf("%d - %s\n", myid, LCS[currPos]);
+		//	printf("%d - %s\n", myid, LCS[currPos]);
 			z++;
 			}
 		pthread_mutex_unlock (&mutexsum);
