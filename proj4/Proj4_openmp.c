@@ -1,184 +1,140 @@
+
+#include <sys/time.h>
 #include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#define ARRAY_SIZE 5
+#define ARTICLE_SIZE 10000
+#define STRING_SIZE 15
 
 
-#define ARRAY_SIZE 1000000
-#define STRING_SIZE 1000
-
-
-char File_Contents[ARRAY_SIZE][STRING_SIZE];
-
-void print_results(char x[], int i, int j, char **b, int *iptr, char *r);
-void lcs(char x[], char y[], char **b, int **c);
-//void * find_longest_substring(int  id);
-//void init_array(FILE *);
-//void print_results();
+char File_Contents[ARRAY_SIZE][ARTICLE_SIZE];
+void * find_longest_substring(int  id, char **, int, int);
+int init_array(FILE *, int);
+void print_results(char **);
 
 int main(int argc, const char ** argv) {
 
-
-	const int INPUT_SIZE = atoi(argv[2]);
-	const int NUM_OF_THREADS = atoi(argv[3]);
-	FILE * fp = fopen(argv[1], "r");
-	//omp_set_num_threads(NUM_THREADS);
-	int i = 0;
-	if (fp != NULL)
+  if (argc != 3)
 	{
-		char line[STRING_SIZE];
-		while (fgets(line, STRING_SIZE, fp) != NULL && i < INPUT_SIZE)
-		{
-			//strncpy(File_Contents[i++], line, strlen(line)-1);
-			strcpy(File_Contents[i++], line);
-
-		}
-		fclose(fp);
-		if (i < 0)
-			return -1;
+		printf ("%s is not a valid inputs\n", argv[0]);
+		return -1;
 	}
 
-	const int RESULTS_SIZE = i - 1;//one less job than the number of lines
-	const int LINES_PER_THREAD = i % NUM_OF_THREADS == 0 ? i / NUM_OF_THREADS : i / NUM_OF_THREADS + 1;
+	const int INPUT_LINES = atoi(argv[1]);
+	const int NUM_THREADS = atoi(argv[2]);
+	struct timeval t1, t2;
+	double elapsedTime;
+	gettimeofday(&t1, NULL);
 
-	int result_array_sizes[RESULTS_SIZE];
+	FILE * fp = fopen("testLorem.txt", "r");
+  int linesRead = init_array(fp, INPUT_LINES);
+  if(linesRead<0) return -1;
+ 	const int LINES_PER_THREAD = linesRead % NUM_THREADS == 0 ? linesRead/NUM_THREADS : linesRead/NUM_THREADS + 1;
+  
+	char * LCS[ARRAY_SIZE - 1];
+	for (int i = 0; i < ARRAY_SIZE - 1; i++)
+		LCS[i] = (char *)malloc(sizeof(char) * (STRING_SIZE));
 
-	//allocate memory for results array
+	
 
-	char **results = (char **)malloc(RESULTS_SIZE * sizeof(char *));//because this is also a 2d array
-	for (int i = 0; i < RESULTS_SIZE; i++)
-	{
-		results[i] = (char *)malloc(STRING_SIZE * sizeof(char));
-	}
 
-	omp_set_num_threads(NUM_OF_THREADS);//relocated
+	omp_set_num_threads(NUM_THREADS);
+
 
 #pragma omp parallel 
 	{
-		//find_longest_substring(omp_get_thread_num());
-		int o;
-		int thread_id = omp_get_thread_num();
-		int start_index = thread_id * LINES_PER_THREAD;
-		int end_index = start_index + LINES_PER_THREAD;
-		thread_id++;
-
-		o = start_index;
-		while (o < end_index && o < i - 1)
-		{
-			int j, m, n, k, index;
-			int xlen = strlen(File_Contents[o]);//first line
-			int ylen = strlen(File_Contents[o + 1]);//next line
-
-			//allocate memory for these 2 lines to store them separately
-			char *x = (char *)malloc((xlen + 1) * sizeof(char)); 			// first string
-			char *y = (char *)malloc((ylen + 1) * sizeof(char));			// second string
-
-
-			char **b = (char **)malloc((xlen + 1) * sizeof(char *));
-			int **c = (int **)malloc((xlen + 1) * sizeof(int *));
-
-			// initialize b and c
-			for (j = 0; j <= xlen; j++)
-			{
-				b[j] = (char *)malloc((ylen + 1) * sizeof(char));
-				c[j] = (int *)malloc((ylen + 1) * sizeof(int));
-			}
-
-			strncpy(x, File_Contents[o], xlen + 1);//strlen does not include the null character but it does count the enwline character 
-			strncpy(y, File_Contents[o + 1], ylen + 1);
-
-			lcs(x, y, b, c);
-
-			// get lcs lengths
-			m = strlen(x);
-			n = strlen(y);
-
-			index = 0;
-			print_results(x, m, n, b, &index, results[o]);
-
-			// save the size of the results string
-			result_array_sizes[o] = index;
-
-			for (k = 0; k < xlen; k++)
-			{
-				free(b[k]);
-				free(c[k]);
-			}
-
-			free(b);
-			free(c);
-			free(x);
-			free(y);
-			o++;
-		}
+		find_longest_substring(omp_get_thread_num(), LCS, NUM_THREADS, LINES_PER_THREAD);
 	}
-	for (i = 0; i < RESULTS_SIZE; i++)
-	{
-		printf("\tLines %d-%d:\t", i + 1, i + 2);
-		for (int s = 0; s < result_array_sizes[i]; s++)
-			printf("%c", results[i][s]);
-		printf("\n");
-	}
-
-
-	for (i = 0; i < RESULTS_SIZE; i++)
-		free(results[i]);
-	free(results);
-
+	print_results(LCS);
+	gettimeofday(&t2, NULL);
+	elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0; //sec to ms
+	elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0; // us to ms
+	printf("Total time to run: %f\n", elapsedTime);
 	printf("Main: program completed. Exiting.\n");
-	return 0;
-}
-void print_results(char x[], int i, int j, char **b, int *iptr, char *r)
-{
-	if (i == 0 || j == 0)
-		return;
-	if (b[i][j] == 'm')
-	{
-		print_results(x, i - 1, j - 1, b, iptr, r);
-		r[(*iptr)++] = x[i - 1];
-	}
-	else if (b[i][j] == 'u')
-		print_results(x, i - 1, j, b, iptr, r);
-	else
-		print_results(x, i, j - 1, b, iptr, r);
 }
 
-
-
-void lcs(char x[], char y[], char **b, int **c)
+int init_array(FILE * fp, const int inputSize)
 {
-	int i, j, m, n;
-
-	m = strlen(x);
-	n = strlen(y);
-
-	for (i = 0; i <= m; i++)
-		c[i][0] = 0;//initialize first column
-	for (i = 0; i <= n; i++)
-		c[0][i] = 0;//initialize first row
-
-		//dynamic programming approach
-	for (i = 1; i <= m; i++)
+	int i = 0;
+	if (fp != NULL)
 	{
-		for (j = 1; j <= n; j++)
+		char line[ARTICLE_SIZE];
+		while (fgets(line, ARTICLE_SIZE, fp) != NULL  && i < inputSize)
 		{
-      //diagonally same so the previous character matched
-			if (x[i - 1] == y[j - 1])
+			strcpy(File_Contents[i], line);
+      i++;
+
+		}
+		fclose(fp);
+	}
+	return i;
+
+}
+
+void print_results(char ** LCS)
+{
+	int j;	// then print out the totals
+	for (int i = 0; i < ARRAY_SIZE - 1; i++)
+	{
+		j = i + 1;
+		printf(" %d & %d - %s\n", i, j, LCS[i]);
+	}
+}
+
+void *  find_longest_substring(int  id, char ** LCS, int NUM_THREADS, int lpr)//id is 0,1,2,3
+{
+	int startPos, endPos;
+	char local_LCS[ARRAY_SIZE / NUM_THREADS][STRING_SIZE];
+	char substring[STRING_SIZE];
+	int i, j, x, y, maxlen, len, currPos = 0;
+	int length1 = 0;
+	int length2 = 0;
+	int comp = 0;
+#pragma omp private(id, startPos, endPos, currPos, local_LCS, i, j, x, y, maxlen, len, substring, comp)
+	{
+		startPos = (id) * lpr;
+		endPos = startPos + lpr;
+		for (currPos = startPos; currPos < endPos; currPos++)
+		{
+			maxlen = 0;
+			length1 = strlen(File_Contents[currPos]);
+			length2 = strlen(File_Contents[currPos + 1]);
+			for (i = 0; i <= length1; i++)
 			{
-				c[i][j] = c[i - 1][j - 1] + 1;
-				b[i][j] = 'm';//matched
+				for (j = 0; j <= length2; j++)
+				{
+					if (File_Contents[currPos][i] == File_Contents[currPos + 1][j])
+					{
+						substring[0] = File_Contents[currPos][i];
+						len = 1;
+						x = i + 1;
+						y = j + 1;
+						while (File_Contents[currPos][x] == File_Contents[currPos + 1][y] && x < length1 && y < length2 && len < STRING_SIZE)
+						{
+							substring[len] = File_Contents[currPos][x];
+							len++;
+							x++;
+							y++;
+						}
+						if (len > maxlen)
+						{
+							maxlen = len;
+							strcpy(local_LCS[comp], substring);
+						}
+					}
+				}
 			}
-      //finds the maximum of the cell one row or one column below the current cell
-			else if (c[i - 1][j] >= c[i][j - 1])
+			comp++;
+		}		//put substring in global array
+#pragma omp critical
+		{
+			int z = 0;
+			for (currPos = startPos; currPos < endPos; currPos++)
 			{
-				c[i][j] = c[i - 1][j];
-				b[i][j] = 'u';//unmatched
-			}
-      //cell in previous column but same row had a bigger value than current cell 
-			else
-			{
-				c[i][j] = c[i][j - 1];
-				b[i][j] = 'l';
+				strcpy(LCS[currPos], local_LCS[z]);
+				z++;
 			}
 		}
 	}
