@@ -1,4 +1,5 @@
 #include <pthread.h>
+#include <sys/time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,6 +17,10 @@ void * find_longest_substring(void * id);
 void init_array(FILE *);
 void print_results();
 int main() {
+	int myVersion = 2; //base = 1, pthreads = 2, openmp = 3, mpi = 4
+	struct timeval t1, t2;
+	double elapsedTime;
+	gettimeofday(&t1, NULL);
 	int i= 0, rc;
 	FILE * fp = fopen ("testLorem.txt", "r");
 	pthread_t threads[NUM_THREADS];
@@ -49,7 +54,10 @@ int main() {
 	pthread_mutex_destroy(&mutexsum);
 
 	print_results(LCS);
-
+	gettimeofday(&t2, NULL);
+	elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0; //sec to ms
+	elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0; // us to ms
+	printf("DATA, %d, %s, %f, %d\n", myVersion, getenv("NSLOTS"), elapsedTime, NUM_THREADS);
 	printf("Main: program completed. Exiting.\n");
 	pthread_exit(NULL);
 

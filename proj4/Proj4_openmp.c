@@ -1,4 +1,4 @@
-
+#include <sys/time.h>
 #include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,6 +15,9 @@ void print_results(char **);
 
 int main() {
 
+	struct timeval t1, t2;
+	double elapsedTime;
+	gettimeofday(&t1, NULL);
 	FILE * fp = fopen ("testLorem.txt", "r");
 	char * LCS[ARRAY_SIZE-1];
 	for(int i = 0; i<ARRAY_SIZE-1; i++)
@@ -27,6 +30,10 @@ int main() {
 		find_longest_substring(omp_get_thread_num(), LCS);
 	}
 	print_results(LCS);
+	gettimeofday(&t2, NULL);
+	elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0; //sec to ms
+	elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0; // us to ms
+	printf("Total time to run: %f\n", elapsedTime);
 	printf("Main: program completed. Exiting.\n");
 }
 
