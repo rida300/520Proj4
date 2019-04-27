@@ -4,12 +4,12 @@
 #include <stdbool.h>
 #include "mpi.h"
 
-#define MAX_ENTRIES 1000000		// longest file size will be 1000000 entries long
-#define MAX_STRING_SIZE 10000
+#define ARRAY_SIZE 1000000		// longest file size will be 1000000 entries long
+#define ARTICLE_SIZE 10000
 #define send_tag 1000
 
 /* holds each line of the file */
-char File_Contents[MAX_ENTRIES][MAX_STRING_SIZE];
+char File_Contents[ARRAY_SIZE][ARTICLE_SIZE];
 
 void print (char x[], int i, int j, char **b, int *iptr, char *r)
 {
@@ -66,7 +66,7 @@ void lcs (char x[], char y[], char **b, int **c)
 int read_file (const char filename[], const int INPUT_SIZE)
 {
 	FILE *file;
-	char x[MAX_STRING_SIZE];
+	char x[ARTICLE_SIZE];
 	int index;
 	
 	file = fopen (filename, "r");
@@ -78,7 +78,7 @@ int read_file (const char filename[], const int INPUT_SIZE)
 	}
 	
 	index = 0;
-	while (fgets (x, MAX_STRING_SIZE, file) != NULL && index < INPUT_SIZE)
+	while (fgets (x, ARTICLE_SIZE, file) != NULL && index < INPUT_SIZE)
 	{
 		strcpy (File_Contents[index], x);
 		index++;
@@ -134,7 +134,7 @@ int main (int argc, char **argv)
 		// allocate memory for LCS buffer
 		LCS = (char **)malloc (LCS_SIZE * sizeof (char *));
 		for (i = 0; i < LCS_SIZE; i++)
-			LCS[i] = (char *)malloc (MAX_STRING_SIZE * sizeof (char));
+			LCS[i] = (char *)malloc (ARTICLE_SIZE * sizeof (char));
 		// allocate memory for LCS sizes
 		result_sizes = (int *)malloc (LCS_SIZE * sizeof (int));
 		
@@ -194,14 +194,14 @@ int main (int argc, char **argv)
 		{
 			int num_of_LCS, ye_ol_index, worker_num, p, j, k;
 			int LCS_array_sizes[LINES_PER_THREAD];
-			char *worker_msg = (char *)malloc (LINES_PER_THREAD * MAX_STRING_SIZE * sizeof (char));
+			char *worker_msg = (char *)malloc (LINES_PER_THREAD * ARTICLE_SIZE * sizeof (char));
 			
 			// receive number of LCS being sent by worker
 			MPI_Recv (&num_of_LCS, 1, MPI_INT, i, send_tag*i+i, MPI_COMM_WORLD, &status);
 			// receive worker's LCS_array_sizes array
 			MPI_Recv (LCS_array_sizes, LINES_PER_THREAD, MPI_INT, i, send_tag*i+i+1, MPI_COMM_WORLD, &status);
 			// receive worker's LCS array
-			MPI_Recv (worker_msg, LINES_PER_THREAD * MAX_STRING_SIZE, MPI_CHAR, i, send_tag*i+i+2, MPI_COMM_WORLD, &status);
+			MPI_Recv (worker_msg, LINES_PER_THREAD * ARTICLE_SIZE, MPI_CHAR, i, send_tag*i+i+2, MPI_COMM_WORLD, &status);
 			
 			ye_ol_index = i * LINES_PER_THREAD;
 			
@@ -213,7 +213,7 @@ int main (int argc, char **argv)
 			for (p = 0; p < num_of_LCS; p++)
 			{
 				for (j = 0; j < LCS_array_sizes[p]-1; j++)
-					LCS[ye_ol_index+p][j] = worker_msg[(p*MAX_STRING_SIZE)+j];
+					LCS[ye_ol_index+p][j] = worker_msg[(p*ARTICLE_SIZE)+j];
 			}
 			
 			free (worker_msg);
@@ -239,7 +239,7 @@ int main (int argc, char **argv)
 		
 		// allocate memory for worker result array
 		// **must be contiguous for mpi**
-		worker_LCS = (char *)malloc (LINES_PER_THREAD * MAX_STRING_SIZE * sizeof (char));
+		worker_LCS = (char *)malloc (LINES_PER_THREAD * ARTICLE_SIZE * sizeof (char));
 			
 		// worker variable for worker result size
 		int worker_result_size = 0;
@@ -275,9 +275,9 @@ int main (int argc, char **argv)
 			m = strlen (x);
 			n = strlen (y);		
 			
-			index += (i * MAX_STRING_SIZE) - index;
+			index += (i * ARTICLE_SIZE) - index;
 			print (x, m, n, b, &index, worker_LCS);
-			LCS_array_sizes[i] = index - (i * MAX_STRING_SIZE);
+			LCS_array_sizes[i] = index - (i * ARTICLE_SIZE);
 			
 			for (k = 0; k < xlen; k++)
 			{
@@ -295,7 +295,7 @@ int main (int argc, char **argv)
 		// send stuff to parent process
 		MPI_Send (&worker_result_size, 1, MPI_INT, 0, send_tag*rank+rank, MPI_COMM_WORLD);
 		MPI_Send (LCS_array_sizes, LINES_PER_THREAD, MPI_INT, 0, send_tag*rank+rank+1, MPI_COMM_WORLD);
-		MPI_Send (worker_LCS, LINES_PER_THREAD * MAX_STRING_SIZE, MPI_CHAR, 0, send_tag*rank+rank+2, MPI_COMM_WORLD);
+		MPI_Send (worker_LCS, LINES_PER_THREAD * ARTICLE_SIZE, MPI_CHAR, 0, send_tag*rank+rank+2, MPI_COMM_WORLD);
 		
 		free (worker_LCS);
 	}
