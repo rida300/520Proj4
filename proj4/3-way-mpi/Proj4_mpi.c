@@ -57,14 +57,6 @@ void find_longest_substring(char* line1_file, char* line2_file, int length1, int
 				local_LCS[i][j] = 0;//no match for the previous character
 		}
 	}
-
-	/*
-	if (cur_substr_len == 0) 
-	{
-		printf("%d-%d: No Common Substring\n", line1, line2);
-		return;
-	}
-	*/
 	
 	char* resultingArr = (char*)malloc((cur_substr_len + 1) * sizeof(char));//ending character needs to be accomodated
 	resultingArr[cur_substr_len] = '\0';//otherwise it continues to add random characters to the string
@@ -77,14 +69,7 @@ void find_longest_substring(char* line1_file, char* line2_file, int length1, int
 		col--;//decrementing both because the longest entry will be formed diagonally, not vertical nor horizontal
 	}
 	undoMalloc(local_LCS, length1);
-	/*
-	//remove newline char
-	size_t length;
-	if ((length = strlen(resultingArr)) > 0) {
-		if (resultingArr[length - 1] == '\n')
-			resultingArr[length - 1] = '\0';
-	}
-	*/
+	
 	// required longest common substring
 	printf("%d-%d: %s\n", line1, line2, resultingArr);
 	free(resultingArr);
