@@ -70,7 +70,7 @@ void find_longest_substring(char* line1_file, char* line2_file, int length1, int
 	}
 	undoMalloc(local_LCS, length1);
 	
-	// required longest common substring
+	//print the common string one at a time
 	printf("%d-%d: %s\n", line1, line2, resultingArr);
 	free(resultingArr);
 
@@ -180,11 +180,12 @@ int main(int argc, char *argv[])
 	}
 	int input_lines = atol(argv[2]);
 	Lines_Read = input_lines;
-	//read file into array
+	
 
 
 	File_Contents = malloc(sizeof(char*) * input_lines);
 	int i=0;
+	//file IO
 	while(i<input_lines)
 	{
 		if (ferror(fp) || feof(fp)) break;		
@@ -196,7 +197,7 @@ int main(int argc, char *argv[])
 	for (int i = 0; i < Lines_Read - 1; i++)
 		LCS[i] = (char *)malloc(sizeof(char) * (STRING_SIZE));
 
-	//process array in lcs function	
+	
 	
 	int process_number, rank;
 
