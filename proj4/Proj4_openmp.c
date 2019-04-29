@@ -8,7 +8,7 @@
 #define ARTICLE_SIZE 10000
 #define STRING_SIZE 15
 
-
+ 
 char File_Contents[ARRAY_SIZE][ARTICLE_SIZE];
 void * find_longest_substring(int  id, char **, int, int);
 int init_array(FILE *, int);
