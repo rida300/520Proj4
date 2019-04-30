@@ -4,9 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define ARRAY_SIZE 5
+#define ARRAY_SIZE 7
 #define ARTICLE_SIZE 10000
-#define STRING_SIZE 15
+#define STRING_SIZE 200
 
 int NUM_THREADS;
 int INPUT_LINES;
@@ -30,7 +30,7 @@ int main(int argc, const char ** argv) {
 	double elapsedTime;
 	gettimeofday(&t1, NULL);
 
-	FILE * fp = fopen("testLorem.txt", "r");
+	FILE * fp = fopen("testFile.txt", "r");
   int linesRead = init_array(fp, INPUT_LINES);
   if(linesRead<0) return -1;
   
@@ -61,7 +61,7 @@ int init_array(FILE * fp, const int inputSize)
 		while (fgets(line, ARTICLE_SIZE, fp) != NULL  && i < inputSize)
 		{
 			strcpy(File_Contents[i], line);
-      i++;
+      			i++;
 
 		}
 		fclose(fp);
@@ -83,7 +83,7 @@ void print_results(char ** LCS)
 void *  find_longest_substring(int  id, char ** LCS)//id is 0,1,2,3
 {
 	int startPos, endPos;
-	char local_LCS[ARRAY_SIZE / NUM_THREADS][STRING_SIZE];
+	char local_LCS[ARRAY_SIZE / NUM_THREADS+2][STRING_SIZE];
 	char substring[STRING_SIZE];
 	int i, j, x, y, maxlen, len, currPos = 0;
 	int length1 = 0;
@@ -93,8 +93,16 @@ void *  find_longest_substring(int  id, char ** LCS)//id is 0,1,2,3
 	{
 		startPos = (id) * (INPUT_LINES/NUM_THREADS);
 		endPos = startPos + (INPUT_LINES/NUM_THREADS);
+		if(endPos == NUM_THREADS)
+		{
+			endPos = INPUT_LINES-1;
+		}
+		
+		
+		printf("%d - start, %d - end \n", startPos, endPos);
 		for (currPos = startPos; currPos < endPos; currPos++)
 		{
+			printf("%d", currPos);
 			maxlen = 0;
 			length1 = strlen(File_Contents[currPos]);
 			length2 = strlen(File_Contents[currPos + 1]);
@@ -118,7 +126,7 @@ void *  find_longest_substring(int  id, char ** LCS)//id is 0,1,2,3
 						if (len > maxlen)
 						{
 							maxlen = len;
-              substring[maxlen]='\0';
+              						substring[maxlen]='\0';
 							strcpy(local_LCS[comp], substring);
 						}
 					}
