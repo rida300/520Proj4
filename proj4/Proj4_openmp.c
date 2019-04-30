@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define ARRAY_SIZE 7
+#define ARRAY_SIZE 5
 #define ARTICLE_SIZE 10000
 #define STRING_SIZE 200
 
@@ -30,7 +30,7 @@ int main(int argc, const char ** argv) {
 	double elapsedTime;
 	gettimeofday(&t1, NULL);
 
-	FILE * fp = fopen("testFile.txt", "r");
+	FILE * fp = fopen("testLorem.txt", "r");
   int linesRead = init_array(fp, INPUT_LINES);
   if(linesRead<0) return -1;
   
@@ -93,7 +93,7 @@ void *  find_longest_substring(int  id, char ** LCS)//id is 0,1,2,3
 	{
 		startPos = (id) * (INPUT_LINES/NUM_THREADS);
 		endPos = startPos + (INPUT_LINES/NUM_THREADS);
-		if(endPos == NUM_THREADS)
+		if(id == NUM_THREADS-1)
 		{
 			endPos = INPUT_LINES-1;
 		}
