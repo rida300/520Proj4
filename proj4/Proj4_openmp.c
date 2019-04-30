@@ -4,26 +4,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
+#include "sys/types.h"
+#include "sys/sysinfo.h"
 #define ARRAY_SIZE 5
 #define ARTICLE_SIZE 10000
 #define STRING_SIZE 200
+
+typedef struct {
+  uint32_t virtualMem;
+  uint32_t physicalMem;
+} processMem_t;
 
 int NUM_THREADS;
 int INPUT_LINES;
  
 char File_Contents[ARRAY_SIZE][ARTICLE_SIZE];
 void * find_longest_substring(int id, char **);
-int init_array(FILE *, int);
+void GetProcessMemory(processMem_t*);
+int init_Array(FILE * fp);
 void print_results(char **);
+int parseLine(char *);
 
-int main(int argc, const char ** argv) {
+int main(int argc,  const char ** argv) {
 
   if (argc != 3)
 	{
 		printf ("%s is not a valid inputs\n", argv[0]);
 		return -1;
 	}
-
+	int numSlots, myVersion = 1;
+	processMem_t myMemory;
 	INPUT_LINES = atoi(argv[1]);
 	NUM_THREADS = atoi(argv[2]);
 	struct timeval t1, t2;
@@ -31,7 +42,7 @@ int main(int argc, const char ** argv) {
 	gettimeofday(&t1, NULL);
 
 	FILE * fp = fopen("testLorem.txt", "r");
-  int linesRead = init_array(fp, INPUT_LINES);
+  int linesRead = init_Array(fp);
   if(linesRead<0) return -1;
   
 	char * LCS[ARRAY_SIZE - 1];
@@ -40,28 +51,62 @@ int main(int argc, const char ** argv) {
 	omp_set_num_threads(NUM_THREADS);
 
 
+
 #pragma omp parallel 
 	{
 		find_longest_substring(omp_get_thread_num(), LCS);
+		
 	}
 	print_results(LCS);
+	GetProcessMemory(&myMemory);
 	gettimeofday(&t2, NULL);
 	elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0; //sec to ms
 	elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0; // us to ms
+
 	printf("Total time to run: %f\n", elapsedTime);
+	printf("DATA, %d, %u, %u\n", NUM_THREADS, myMemory.virtualMem, myMemory.physicalMem);
 	printf("Main: program completed. Exiting.\n");
 }
 
-int init_array(FILE * fp, const int inputSize)
+void GetProcessMemory(processMem_t* processMem) {
+	FILE *file = fopen("/proc/self/status", "r");
+	char line[128];
+
+	while (fgets(line, 128, file) != NULL) {
+		//printf("%s", line);
+		if (strncmp(line, "VmSize:", 7) == 0) {
+			processMem->virtualMem = parseLine(line);
+		}
+
+		if (strncmp(line, "VmRSS:", 6) == 0) {
+			processMem->physicalMem = parseLine(line);
+		}
+	}
+	fclose(file);
+}// end GetProcessMemory
+
+int parseLine(char *line) {
+	// This assumes that a digit will be found and the line ends in " Kb".
+	int i = strlen(line);
+	const char *p = line;
+	while (*p < '0' || *p > '9') p++;
+	line[i - 3] = '\0';
+	i = atoi(p);
+	printf("in parse: %d", i);
+	return i;
+}// end parseLine
+
+int init_Array(FILE * fp)
 {
 	int i = 0;
 	if (fp != NULL)
 	{
 		char line[ARTICLE_SIZE];
-		while (fgets(line, ARTICLE_SIZE, fp) != NULL  && i < inputSize)
+		while (fgets(line, ARTICLE_SIZE, fp) != NULL  && i < INPUT_LINES)
 		{
 			strcpy(File_Contents[i], line);
       			i++;
+ 	
 
 		}
 		fclose(fp);
