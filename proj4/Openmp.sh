@@ -2,7 +2,7 @@
 ##############################################################################
 # FILE: batchscript.c
 # DESCRIPTION:
-#   Simple Slurm job command script for MPI exercise
+#   Simple Slurm job command script for OMP exercise
 #pthreads
 # AUTHOR: Blaise Barney
 # LAST REVISED: 05/23/17
