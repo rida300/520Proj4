@@ -2,15 +2,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
+#include "sys/types.h"
+#include "sys/sysinfo.h"
 #include <mpi.h>
 #include <math.h>
-#define MAXCHAR 2000
+#define ARTICLE_SIZE 10000
 #define STRING_SIZE 15
+
+
+typedef struct {
+  uint32_t virtualMem;
+  uint32_t physicalMem;
+} processMem_t;
+
 
 void find_longest_substring(char* line1_file, char* line2_file, int length1, int length2, int line1, int line2);
 void LCS_intermediate(int id, char ** LCS);
 void undoMalloc(int **file, int num_line);
 void print_results(char ** LCS);
+void GetProcessMemory(processMem_t*);
+int parseLine(char *);
 
 int NUM_THREADS;
 char** File_Contents;
@@ -57,6 +69,14 @@ void find_longest_substring(char* line1_file, char* line2_file, int length1, int
 				local_LCS[i][j] = 0;//no match for the previous character
 		}
 	}
+
+	/*
+	if (cur_substr_len == 0) 
+	{
+		printf("%d-%d: No Common Substring\n", line1, line2);
+		return;
+	}
+	*/
 	
 	char* resultingArr = (char*)malloc((cur_substr_len + 1) * sizeof(char));//ending character needs to be accomodated
 	resultingArr[cur_substr_len] = '\0';//otherwise it continues to add random characters to the string
@@ -69,8 +89,15 @@ void find_longest_substring(char* line1_file, char* line2_file, int length1, int
 		col--;//decrementing both because the longest entry will be formed diagonally, not vertical nor horizontal
 	}
 	undoMalloc(local_LCS, length1);
-	
-	//print the common string one at a time
+	/*
+	//remove newline char
+	size_t length;
+	if ((length = strlen(resultingArr)) > 0) {
+		if (resultingArr[length - 1] == '\n')
+			resultingArr[length - 1] = '\0';
+	}
+	*/
+	// required longest common substring
 	printf("%d-%d: %s\n", line1, line2, resultingArr);
 	free(resultingArr);
 
@@ -172,7 +199,7 @@ int main(int argc, char *argv[])
 		printf("Enter the filename followed by the number of lines\n");
 		return 0;
 	}
-
+  processMem_t myMemory;
 	FILE * fp = fopen(argv[1], "r");
 	if (fp == NULL) {
 		printf("File not found \n");
@@ -180,24 +207,23 @@ int main(int argc, char *argv[])
 	}
 	int input_lines = atol(argv[2]);
 	Lines_Read = input_lines;
-	
+	//read file into array
 
 
 	File_Contents = malloc(sizeof(char*) * input_lines);
 	int i=0;
-	//file IO
 	while(i<input_lines)
 	{
 		if (ferror(fp) || feof(fp)) break;		
-		File_Contents[i] = malloc(sizeof(char) * MAXCHAR);
-		fgets(File_Contents[i], MAXCHAR, fp);
+		File_Contents[i] = malloc(sizeof(char) * ARTICLE_SIZE);
+		fgets(File_Contents[i], ARTICLE_SIZE, fp);
 		i++;
 	}
 	char * LCS[Lines_Read - 1];
 	for (int i = 0; i < Lines_Read - 1; i++)
 		LCS[i] = (char *)malloc(sizeof(char) * (STRING_SIZE));
 
-	
+	//process array in lcs function	
 	
 	int process_number, rank;
 
@@ -225,13 +251,27 @@ int main(int argc, char *argv[])
 		elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0; //sec to ms
 		elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0; // us to ms
 		printf("%s, %f\n", getenv("SLURM_CPUS_ON_NODE"), elapsedTime);
+  	printf("DATA, %d, %u, %u\n", NUM_THREADS, myMemory.virtualMem, myMemory.physicalMem);
 		printf("Main: program completed. Exiting.\n");
 	}
 	//free the array
 	undoMalloc((int **)File_Contents, Lines_Read);
 	fclose(fp);
+  
+	GetProcessMemory(&myMemory);
 	return 0;
 }
+
+int parseLine(char *line) {
+	// This assumes that a digit will be found and the line ends in " Kb".
+	int i = strlen(line);
+	const char *p = line;
+	while (*p < '0' || *p > '9') p++;
+	line[i - 3] = '\0';
+	i = atoi(p);
+	printf("in parse: %d", i);
+	return i;
+}// end parseLine
 
 void undoMalloc(int **file, int num_line)
 {
@@ -241,3 +281,20 @@ void undoMalloc(int **file, int num_line)
 	}
 	free(file);
 }
+
+void GetProcessMemory(processMem_t* processMem) {
+	FILE *file = fopen("/proc/self/status", "r");
+	char line[128];
+
+	while (fgets(line, 128, file) != NULL) {
+		//printf("%s", line);
+		if (strncmp(line, "VmSize:", 7) == 0) {
+			processMem->virtualMem = parseLine(line);
+		}
+
+		if (strncmp(line, "VmRSS:", 6) == 0) {
+			processMem->physicalMem = parseLine(line);
+		}
+	}
+	fclose(file);
+}// end GetProcessMemory
