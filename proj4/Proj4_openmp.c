@@ -8,9 +8,11 @@
 #define ARTICLE_SIZE 10000
 #define STRING_SIZE 15
 
+int NUM_THREADS;
+int INPUT_LINES;
  
 char File_Contents[ARRAY_SIZE][ARTICLE_SIZE];
-void * find_longest_substring(int  id, char **, int, int);
+void * find_longest_substring(int id, char **);
 int init_array(FILE *, int);
 void print_results(char **);
 
@@ -22,8 +24,8 @@ int main(int argc, const char ** argv) {
 		return -1;
 	}
 
-	const int INPUT_LINES = atoi(argv[1]);
-	const int NUM_THREADS = atoi(argv[2]);
+	INPUT_LINES = atoi(argv[1]);
+	NUM_THREADS = atoi(argv[2]);
 	struct timeval t1, t2;
 	double elapsedTime;
 	gettimeofday(&t1, NULL);
@@ -31,21 +33,16 @@ int main(int argc, const char ** argv) {
 	FILE * fp = fopen("testLorem.txt", "r");
   int linesRead = init_array(fp, INPUT_LINES);
   if(linesRead<0) return -1;
- 	const int LINES_PER_THREAD = linesRead % NUM_THREADS == 0 ? linesRead/NUM_THREADS : linesRead/NUM_THREADS + 1;
   
 	char * LCS[ARRAY_SIZE - 1];
 	for (int i = 0; i < ARRAY_SIZE - 1; i++)
 		LCS[i] = (char *)malloc(sizeof(char) * (STRING_SIZE));
-
-	
-
-
 	omp_set_num_threads(NUM_THREADS);
 
 
 #pragma omp parallel 
 	{
-		find_longest_substring(omp_get_thread_num(), LCS, NUM_THREADS, LINES_PER_THREAD);
+		find_longest_substring(omp_get_thread_num(), LCS);
 	}
 	print_results(LCS);
 	gettimeofday(&t2, NULL);
@@ -83,7 +80,7 @@ void print_results(char ** LCS)
 	}
 }
 
-void *  find_longest_substring(int  id, char ** LCS, int NUM_THREADS, int lpr)//id is 0,1,2,3
+void *  find_longest_substring(int  id, char ** LCS)//id is 0,1,2,3
 {
 	int startPos, endPos;
 	char local_LCS[ARRAY_SIZE / NUM_THREADS][STRING_SIZE];
@@ -94,8 +91,8 @@ void *  find_longest_substring(int  id, char ** LCS, int NUM_THREADS, int lpr)//
 	int comp = 0;
 #pragma omp private(id, startPos, endPos, currPos, local_LCS, i, j, x, y, maxlen, len, substring, comp)
 	{
-		startPos = (id) * lpr;
-		endPos = startPos + lpr;
+		startPos = (id) * (INPUT_LINES/NUM_THREADS);
+		endPos = startPos + (INPUT_LINES/NUM_THREADS);
 		for (currPos = startPos; currPos < endPos; currPos++)
 		{
 			maxlen = 0;
@@ -121,6 +118,7 @@ void *  find_longest_substring(int  id, char ** LCS, int NUM_THREADS, int lpr)//
 						if (len > maxlen)
 						{
 							maxlen = len;
+              substring[maxlen]='\0';
 							strcpy(local_LCS[comp], substring);
 						}
 					}
