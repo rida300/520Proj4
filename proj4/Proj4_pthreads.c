@@ -56,7 +56,7 @@ int main(int argc, char ** argv) {
 	fflush(stdout);
 	int i= 0, rc;
 	FILE * fp = fopen ("testFile.txt", "r");
-	pthread_t threads[NUM_THREADS];
+	pthread_t *threads= malloc(sizeof(pthread_t)*NUM_THREADS);
 	pthread_attr_t attr;
 	void *status;
 
@@ -75,7 +75,7 @@ int main(int argc, char ** argv) {
 	      }
 	}
 free(File_Contents);
-print("");
+
 fflush(stdout);
 /* Free attribute and wait for the other threads */
 	pthread_attr_destroy(&attr);
