@@ -187,6 +187,7 @@ void * find_longest_substring(void * id)//id is 0,1,2,3
 			{
 			strcpy(LCS[currPos], local_LCS[z]);
 			z++;
+			printf("%s", LCS[currPos]);
 			}
 		pthread_mutex_unlock (&mutexsum);
 		pthread_exit(NULL);
