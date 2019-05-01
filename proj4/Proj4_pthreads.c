@@ -83,7 +83,7 @@ int main(int argc, char ** argv) {
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
 	init_array(fp);
-	for (i = 0; i < NUM_THREADS-1; i++ ) {
+	for (i = 0; i < NUM_THREADS; i++ ) {
 	      rc = pthread_create(&threads[i], &attr, find_longest_substring, (void *)(intptr_t)i);
 		if (rc) {
 	        printf("ERROR; return code from pthread_create() is %d\n", rc);
@@ -92,7 +92,7 @@ int main(int argc, char ** argv) {
 	}
 /* Free attribute and wait for the other threads */
 	pthread_attr_destroy(&attr);
-	for(i=0; i<NUM_THREADS-1; i++) {
+	for(i=0; i<NUM_THREADS; i++) {
 	     rc = pthread_join(threads[i], &status);
 	     if (rc) {
 		   printf("ERROR; return code from pthread_join() is %d\n", rc);
@@ -187,6 +187,7 @@ void * find_longest_substring(void * id)//id is 0,1,2,3
 			{
 			strcpy(LCS[currPos], local_LCS[z]);
 			z++;
+			printf("%s", LCS[currPos]);
 			}
 		pthread_mutex_unlock (&mutexsum);
 		pthread_exit(NULL);
