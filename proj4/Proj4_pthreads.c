@@ -5,8 +5,8 @@
 #include <string.h>
 #include <stdint.h>
 #define ARRAY_SIZE  5
-#define ARTICLE_SIZE 1000
-#define STRING_SIZE 15
+#define ARTICLE_SIZE 1000000
+#define STRING_SIZE 1000000
 static int NUM_THREADS;
 
 pthread_mutex_t mutexsum;// mutex for LCS
@@ -72,7 +72,7 @@ int main(int argc, char ** argv) {
 	double elapsedTime;
 	gettimeofday(&t1, NULL);
 	int i= 0, rc;
-	FILE * fp = fopen ("testLorem.txt", "r");
+	FILE * fp = fopen ("/homes/dan/625/wiki_dump.txt", "r");
 	pthread_t * threads = malloc(sizeof(pthread_t) * NUM_THREADS);
 	pthread_attr_t attr;
 	void *status;
@@ -83,7 +83,7 @@ int main(int argc, char ** argv) {
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
 	init_array(fp);
-	for (i = 0; i < NUM_THREADS-1; i++ ) {
+	for (i = 0; i < NUM_THREADS; i++ ) {
 	      rc = pthread_create(&threads[i], &attr, find_longest_substring, (void *)(intptr_t)i);
 		if (rc) {
 	        printf("ERROR; return code from pthread_create() is %d\n", rc);
@@ -92,7 +92,7 @@ int main(int argc, char ** argv) {
 	}
 /* Free attribute and wait for the other threads */
 	pthread_attr_destroy(&attr);
-	for(i=0; i<NUM_THREADS-1; i++) {
+	for(i=0; i<NUM_THREADS; i++) {
 	     rc = pthread_join(threads[i], &status);
 	     if (rc) {
 		   printf("ERROR; return code from pthread_join() is %d\n", rc);
