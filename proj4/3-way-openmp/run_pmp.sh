@@ -1,7 +1,7 @@
 #!/bin/bash
 
 gcc -fopenmp -o omp Proj4_openmp.c
-gcc -pthread -o p Proj4_pthreads.c
+gcc -pthread -std=c99 -o p Proj4_pthreads.c
 
 for i in 1 2 4 8 16
 do
