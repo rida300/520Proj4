@@ -25,12 +25,13 @@ void GetProcessMemory(processMem_t*);
 int init_Array(FILE * fp);
 void print_results(char **);
 int parseLine(char *);
+void array_init(char *** , int , int );
 
 int main(int argc,  const char ** argv) {
 
   if (argc != 3)
 	{
-		printf ("%s is not a valid inputs\n", argv[0]);
+		printf ("%s is not a valid input\n", argv[0]);
 		return -1;
 	}
 	int numSlots, myVersion = 1;
@@ -41,7 +42,7 @@ int main(int argc,  const char ** argv) {
 	double elapsedTime;
 	gettimeofday(&t1, NULL);
 
-	FILE * fp = fopen("testLorem.txt", "r");
+	FILE * fp = fopen("testLorem.txt", "r");//"/homes/dan/625/wiki_dump.txt"
   int linesRead = init_Array(fp);
   if(linesRead<0) return -1;
   
@@ -64,8 +65,19 @@ int main(int argc,  const char ** argv) {
 	elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0; // us to ms
 
 	printf("Total time to run: %f\n", elapsedTime);
-	printf("DATA, %d, %u, %u\n", NUM_THREADS, myMemory.virtualMem, myMemory.physicalMem);
+	printf("DATA, %d,%s, %d, %u, %u\n", myVersion, getenv("NSLOTS"), NUM_THREADS, myMemory.virtualMem, myMemory.physicalMem);
 	printf("Main: program completed. Exiting.\n");
+}
+
+
+void array_init(char *** array, int row, int col) {
+	int i;
+	char * temp_array = (char *) malloc(row * col * sizeof(char));
+	(* array) = (char **) malloc(row * sizeof(char *));
+
+	for (i = 0; i < row; i++) {
+		(*array)[i] = &(temp_array[i * col]);
+	}
 }
 
 void GetProcessMemory(processMem_t* processMem) {
@@ -92,7 +104,7 @@ int parseLine(char *line) {
 	while (*p < '0' || *p > '9') p++;
 	line[i - 3] = '\0';
 	i = atoi(p);
-	printf("in parse: %d", i);
+	//printf("in parse: %d", i);
 	return i;
 }// end parseLine
 
@@ -127,8 +139,9 @@ void print_results(char ** LCS)
 
 void *  find_longest_substring(int  id, char ** LCS)//id is 0,1,2,3
 {
-	int startPos, endPos;
-	char local_LCS[ARRAY_SIZE / NUM_THREADS+2][STRING_SIZE];
+	int startPos, endPos;	
+	char ** local_LCS;//[ARRAY_SIZE / NUM_THREADS+2][STRING_SIZE];
+	array_init(&local_LCS, (ARRAY_SIZE/NUM_THREADS), STRING_SIZE);
 	char substring[STRING_SIZE];
 	int i, j, x, y, maxlen, len, currPos = 0;
 	int length1 = 0;
@@ -138,16 +151,15 @@ void *  find_longest_substring(int  id, char ** LCS)//id is 0,1,2,3
 	{
 		startPos = (id) * (INPUT_LINES/NUM_THREADS);
 		endPos = startPos + (INPUT_LINES/NUM_THREADS);
+		
 		if(id == NUM_THREADS-1)
 		{
 			endPos = INPUT_LINES-1;
 		}
 		
-		
-		printf("%d - start, %d - end \n", startPos, endPos);
 		for (currPos = startPos; currPos < endPos; currPos++)
 		{
-			printf("%d", currPos);
+			//printf("%d", currPos);
 			maxlen = 0;
 			length1 = strlen(File_Contents[currPos]);
 			length2 = strlen(File_Contents[currPos + 1]);
@@ -170,8 +182,9 @@ void *  find_longest_substring(int  id, char ** LCS)//id is 0,1,2,3
 						}
 						if (len > maxlen)
 						{
+							
+              				substring[len]='\0';
 							maxlen = len;
-              						substring[maxlen]='\0';
 							strcpy(local_LCS[comp], substring);
 						}
 					}
