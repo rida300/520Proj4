@@ -7,9 +7,9 @@
 #include <stdint.h>
 #include "sys/types.h"
 #include "sys/sysinfo.h"
-#define ARRAY_SIZE 5
-#define ARTICLE_SIZE 10000
-#define STRING_SIZE 200
+
+#define ARTICLE_SIZE 2100
+#define STRING_SIZE 2100
 
 typedef struct {
   uint32_t virtualMem;
@@ -18,17 +18,31 @@ typedef struct {
 
 int NUM_THREADS;
 int INPUT_LINES;
- 
-char File_Contents[ARRAY_SIZE][ARTICLE_SIZE];
+
+char ** File_Contents;
+//char File_Contents[ARRAY_SIZE][ARTICLE_SIZE];
 void * find_longest_substring(int id, char **);
 void GetProcessMemory(processMem_t*);
 int init_Array(FILE * fp);
 void print_results(char **);
 int parseLine(char *);
 
+
+void array_init(char *** array, int row, int col) {
+	int i;
+	char * temp_array = (char *) malloc(row * col * sizeof(char));
+	(* array) = (char **) malloc(row * sizeof(char *));
+
+	for (i = 0; i < row; i++) {
+		(*array)[i] = &(temp_array[i * col]);
+	}
+}
+
+
+
 int main(int argc,  const char ** argv) {
 
-  if (argc != 3)
+  if (argc != 4)
 	{
 		printf ("%s is not a valid inputs\n", argv[0]);
 		return -1;
@@ -37,16 +51,17 @@ int main(int argc,  const char ** argv) {
 	processMem_t myMemory;
 	INPUT_LINES = atoi(argv[1]);
 	NUM_THREADS = atoi(argv[2]);
+	int num_cores = atoi(argv[3]);
 	struct timeval t1, t2;
 	double elapsedTime;
 	gettimeofday(&t1, NULL);
-
-	FILE * fp = fopen("testLorem.txt", "r");
+	array_init(&File_Contents, INPUT_LINES, ARTICLE_SIZE);
+	FILE * fp = fopen("/homes/dan/625/wiki_dump.txt", "r");
   int linesRead = init_Array(fp);
   if(linesRead<0) return -1;
   
-	char * LCS[ARRAY_SIZE - 1];
-	for (int i = 0; i < ARRAY_SIZE - 1; i++)
+	char * LCS[INPUT_LINES - 1];
+	for (int i = 0; i < INPUT_LINES - 1; i++)
 		LCS[i] = (char *)malloc(sizeof(char) * (STRING_SIZE));
 	omp_set_num_threads(NUM_THREADS);
 
@@ -64,7 +79,7 @@ int main(int argc,  const char ** argv) {
 	elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0; // us to ms
 
 	printf("Total time to run: %f\n", elapsedTime);
-	printf("DATA, %d, %u, %u\n", NUM_THREADS, myMemory.virtualMem, myMemory.physicalMem);
+	printf("DATA, %d, %u, %u, %d, %d\n", NUM_THREADS, myMemory.virtualMem, myMemory.physicalMem, num_cores, INPUT_LINES);
 	printf("Main: program completed. Exiting.\n");
 }
 
@@ -92,7 +107,7 @@ int parseLine(char *line) {
 	while (*p < '0' || *p > '9') p++;
 	line[i - 3] = '\0';
 	i = atoi(p);
-	printf("in parse: %d", i);
+	//printf("in parse: %d", i);
 	return i;
 }// end parseLine
 
@@ -118,7 +133,7 @@ int init_Array(FILE * fp)
 void print_results(char ** LCS)
 {
 	int j;	// then print out the totals
-	for (int i = 0; i < ARRAY_SIZE - 1; i++)
+	for (int i = 0; i < INPUT_LINES - 1; i++)
 	{
 		j = i + 1;
 		printf(" %d & %d - %s\n", i, j, LCS[i]);
@@ -128,7 +143,8 @@ void print_results(char ** LCS)
 void *  find_longest_substring(int  id, char ** LCS)//id is 0,1,2,3
 {
 	int startPos, endPos;
-	char local_LCS[ARRAY_SIZE / NUM_THREADS+2][STRING_SIZE];
+	char **local_LCS;
+	array_init(&local_LCS, (INPUT_LINES/NUM_THREADS), STRING_SIZE);//[INPUT_LINES / NUM_THREADS][STRING_SIZE];
 	char substring[STRING_SIZE];
 	int i, j, x, y, maxlen, len, currPos = 0;
 	int length1 = 0;
@@ -142,12 +158,10 @@ void *  find_longest_substring(int  id, char ** LCS)//id is 0,1,2,3
 		{
 			endPos = INPUT_LINES-1;
 		}
-		
-		
-		printf("%d - start, %d - end \n", startPos, endPos);
+		//printf("%d - start, %d - end \n", startPos, endPos);
 		for (currPos = startPos; currPos < endPos; currPos++)
 		{
-			printf("%d", currPos);
+			//printf("%d", currPos);
 			maxlen = 0;
 			length1 = strlen(File_Contents[currPos]);
 			length2 = strlen(File_Contents[currPos + 1]);

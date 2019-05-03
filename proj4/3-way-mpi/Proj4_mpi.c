@@ -26,98 +26,27 @@ int parseLine(char *);
 
 int NUM_THREADS;
 char** File_Contents;
+char ** local_LCS;
+char ** LCS;
 int Lines_Read;
 
 
-void find_longest_substring(char* line1_file, char* line2_file, int length1, int length2, int line1, int line2)
-{
-	//local lcs keeps track of the common string between 2 lines 
-
-	int **local_LCS = malloc((length1 + 1) * sizeof(int *));//int to keep score
-
-	for (int i = 0; i < (length1 + 1); i++)
-		local_LCS[i] = (int*)malloc((length2 + 1) * sizeof(int));
-
-	int cur_substr_len = 0;
-
-	int row, col;
-
-	// go through each character in first string and for each of these characters, traverse every 
-	//character in the second string to find a match
-	for (int i = 0; i <= length1; i++) 
-	{
-		for (int j = 0; j <= length2; j++) 
-		{
-			//if one of the strings is empty, entry in the table is zero
-			if (i == 0 || j == 0)
-				local_LCS[i][j] = 0;
-
-			//check the previous entry in both strings
-			else if (line1_file[i - 1] == line2_file[j - 1]) 
-			{
-				//a new consecutive match is found so add 1 to the previous match
-				local_LCS[i][j] = local_LCS[i - 1][j - 1] + 1;
-				
-				if (cur_substr_len < local_LCS[i][j]) 
-				{
-					cur_substr_len = local_LCS[i][j];
-					row = i;
-					col = j;
-				}
-			}
-			else
-				local_LCS[i][j] = 0;//no match for the previous character
-		}
-	}
-
-	/*
-	if (cur_substr_len == 0) 
-	{
-		printf("%d-%d: No Common Substring\n", line1, line2);
-		return;
-	}
-	*/
-	
-	char* resultingArr = (char*)malloc((cur_substr_len + 1) * sizeof(char));//ending character needs to be accomodated
-	resultingArr[cur_substr_len] = '\0';//otherwise it continues to add random characters to the string
-
-	// go through the table formed above and trace back the longest string
-	while (local_LCS[row][col] != 0) 
-	{
-		resultingArr[--cur_substr_len] = line1_file[row - 1]; 
-		row--;
-		col--;//decrementing both because the longest entry will be formed diagonally, not vertical nor horizontal
-	}
-	undoMalloc(local_LCS, length1);
-	/*
-	//remove newline char
-	size_t length;
-	if ((length = strlen(resultingArr)) > 0) {
-		if (resultingArr[length - 1] == '\n')
-			resultingArr[length - 1] = '\0';
-	}
-	*/
-	// required longest common substring
-	printf("%d-%d: %s\n", line1, line2, resultingArr);
-	free(resultingArr);
-
-}
 
 void LCS_intermediate(int id, char ** LCS ) 
 {
 
-	int startPos = (id) * ((double)Lines_Read / NUM_THREADS);
-	int endPos = startPos + ((double)Lines_Read / NUM_THREADS);
-	int first_line = startPos;
-	int second_line = first_line + 1;
+	int startPos = (id) * (Lines_Read / NUM_THREADS);
+	int endPos = startPos + (Lines_Read / NUM_THREADS);
+	//int first_line = startPos;
+	//int second_line = first_line + 1;
 	int currPos = 0;
 	int length1 = 0;
 	int length2 = 0;
-	char local_LCS[Lines_Read / NUM_THREADS][STRING_SIZE];
+//	char local_LCS[Lines_Read / NUM_THREADS][STRING_SIZE];
 	char substring[STRING_SIZE];
 	int i, j, x, y, maxlen, len;
 	int comp = 0;
-	/*
+	
 	for (currPos = startPos; currPos < endPos; currPos++)
 	{
 	
@@ -152,14 +81,14 @@ void LCS_intermediate(int id, char ** LCS )
 			comp++;
 		}		//put substring in global array
 
-
+/*
 		int z = 0;
 		for (currPos = startPos; currPos < endPos; currPos++)
 		{
 			strcpy(LCS[currPos], local_LCS[z]);
 			z++;
 		}
-		*/
+		
 	for (currPos = startPos; (currPos < endPos) && (currPos + 1 <Lines_Read); currPos++)
 	{
 		length1 = strlen(File_Contents[currPos]);
@@ -169,13 +98,21 @@ void LCS_intermediate(int id, char ** LCS )
 		first_line = second_line;
 		second_line++;
 	}
+	*/	
 		
-		
+}
+
+
+void array_init(char *** array, int row, int col) {
+	int i;
+	char * temp_array = (char *) malloc(row * col * sizeof(char));
+	(* array) = (char **) malloc(row * sizeof(char *));
+printf("is the problem before now?");
+fflush(stdout);
+	for (i = 0; i < row; i++) {
+		(*array)[i] = &(temp_array[i * col]);
 	}
-
-
-
-
+}
 
 void print_results(char ** LCS)
 {
@@ -199,30 +136,34 @@ int main(int argc, char *argv[])
 		printf("Enter the filename followed by the number of lines\n");
 		return 0;
 	}
-  processMem_t myMemory;
-	FILE * fp = fopen(argv[1], "r");
+printf("im in main");
+fflush(stdout);
+	processMem_t myMemory;
+	FILE * fp = fopen("/homes/dan/625/wiki_dump.txt", "r");       	//argv[1], "r");
 	if (fp == NULL) {
 		printf("File not found \n");
 		return 0;
 	}
-	int input_lines = atol(argv[2]);
+	int input_lines = atoi(argv[2]);
 	Lines_Read = input_lines;
+printf("read in the command line argument");
+fflush(stdout);
 	//read file into array
+	//array_init(&local_LCS, (input_lines/NUM_THREADS), STRING_SIZE);
 
-
-	File_Contents = malloc(sizeof(char*) * input_lines);
+	array_init(&File_Contents, input_lines, ARTICLE_SIZE);
+printf("about to read in file");
+fflush(stdout);
 	int i=0;
 	while(i<input_lines)
 	{
 		if (ferror(fp) || feof(fp)) break;		
-		File_Contents[i] = malloc(sizeof(char) * ARTICLE_SIZE);
 		fgets(File_Contents[i], ARTICLE_SIZE, fp);
 		i++;
 	}
-	char * LCS[Lines_Read - 1];
-	for (int i = 0; i < Lines_Read - 1; i++)
-		LCS[i] = (char *)malloc(sizeof(char) * (STRING_SIZE));
+	fclose(fp);
 
+	array_init(&LCS, input_lines-1, STRING_SIZE);
 	//process array in lcs function	
 	
 	int process_number, rank;
@@ -241,11 +182,18 @@ int main(int argc, char *argv[])
 	//determine the number of threads and set it
 	NUM_THREADS = process_number;
 	
+	array_init(&local_LCS, (input_lines/NUM_THREADS), STRING_SIZE);
+	
+	MPI_Bcast(File_Contents, input_lines*ARTICLE_SIZE, MPI_CHAR, 0, MPI_COMM_WORLD);	
+
 	LCS_intermediate(rank, LCS);
 	//print_results(LCS);
 	//When root process ends, terminate MPI
 
-	MPI_Finalize();
+	MPI_Reduce(local_LCS, LCS, input_lines*ARTICLE_SIZE, MPI_CHAR, MPI_SUM, 0, MPI_COMM_WORLD);	
+	printf("i got through the functions");
+	fflush(stdout);
+	
 	if (rank == 0) {
 		gettimeofday(&t2, NULL);
 		elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0; //sec to ms
@@ -256,9 +204,9 @@ int main(int argc, char *argv[])
 	}
 	//free the array
 	undoMalloc((int **)File_Contents, Lines_Read);
-	fclose(fp);
   
 	GetProcessMemory(&myMemory);
+	MPI_Finalize();
 	return 0;
 }
 
