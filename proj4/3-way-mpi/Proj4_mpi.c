@@ -29,6 +29,7 @@ int init_Array(FILE *);
 
 int NUM_THREADS;
 char ** File_Contents;
+//char ** File_ContentsSub;
 char ** local_LCS;
 char ** LCS;
 int Lines_Read;
@@ -61,7 +62,10 @@ fflush(stdout);
 	{
 		
 			maxlen = 0;
+			printf("before the strlen");fflush(stdout);
 			length1 = strlen(File_Contents[currPos]);
+			printf("Read the file contents");
+			fflush(stdout);
 			length2 = strlen(File_Contents[currPos + 1]);
 			for (i = 0; i <= length1; i++)
 			{
@@ -212,18 +216,28 @@ NUM_THREADS = process_number;
 	//determine the number of threads and set it
 	NUM_THREADS = process_number;
 */	
-	//if(rank == 0)
-	//{
-		array_init(&File_Contents, input_lines, ARTICLE_SIZE);
+//	if(rank == 0)
+//	{
+		char File_Content[input_lines][ARTICLE_SIZE];
+//		array_init(&File_Content, input_lines, ARTICLE_SIZE);
+if(rank ==0)
 		init_Array(fp);
-	
+//}
+char  File_ContentsSub[input_lines/NUM_THREADS][ARTICLE_SIZE];
+		//array_init(&File_ContentsSub, Lines_Read/NUM_THREADS, ARTICLE_SIZE);
 		array_init(&LCS, input_lines-1, STRING_SIZE);
 		array_init(&local_LCS, (input_lines/NUM_THREADS), STRING_SIZE);
 	//}
 
-	int out = MPI_Bcast(File_Contents, (Lines_Read)*(ARTICLE_SIZE), MPI_CHAR, 0, MPI_COMM_WORLD);
-printf("%d - %d\n", out, rank);
+//	int out = MPI_Bcast(File_Contents, (Lines_Read)*(ARTICLE_SIZE), MPI_CHAR, 0, MPI_COMM_WORLD);
+//printf("%d - %d\n", out, rank);
+//fflush(stdout);
+
+	MPI_Scatter(File_Content, (Lines_Read/NUM_THREADS), MPI_CHAR, File_ContentsSub, (Lines_Read/NUM_THREADS),MPI_CHAR, 0, MPI_COMM_WORLD);
+printf("node-%d line1=%s\n", rank, File_ContentsSub[0]);
 fflush(stdout);
+
+
 if(rank !=0)
 	LCS_intermediate(rank);
 
@@ -233,7 +247,7 @@ if(rank !=0)
 printf("out of the alg");
 fflush(stdout);
 	MPI_Barrier(MPI_COMM_WORLD);
-	MPI_Reduce(local_LCS, LCS, (input_lines-1)*500 , MPI_CHAR, MPI_SUM, 0, MPI_COMM_WORLD);	
+	MPI_Reduce(local_LCS, LCS, (input_lines-1) , MPI_CHAR, MPI_SUM, 0, MPI_COMM_WORLD);	
 	printf("i got through the functions");
 	fflush(stdout);
 
