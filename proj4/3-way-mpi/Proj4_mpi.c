@@ -18,7 +18,7 @@ typedef struct {
 
 
 void find_longest_substring(char* line1_file, char* line2_file, int length1, int length2, int line1, int line2);
-void LCS_intermediate(int id, char ** LCS);
+void LCS_intermediate(int id);
 void undoMalloc(int **file, int num_line);
 void print_results(char ** LCS);
 void GetProcessMemory(processMem_t*);
@@ -28,20 +28,21 @@ int init_Array(FILE *);
 
 
 int NUM_THREADS;
-char** File_Contents;
+char ** File_Contents;
 char ** local_LCS;
 char ** LCS;
 int Lines_Read;
 
 
 
-void LCS_intermediate(int id, char ** LCS ) 
+void LCS_intermediate(int id) 
 {
 printf("%d\n", id);
 fflush(stdout);
 	int startPos = (id) * (Lines_Read / NUM_THREADS);
 	int endPos = startPos + (Lines_Read / NUM_THREADS);
 	//int first_line = startPos;
+
 	//int second_line = first_line + 1;
 	int currPos = 0;
 	int length1 = 0;
@@ -50,14 +51,15 @@ fflush(stdout);
 	char substring[STRING_SIZE];
 	int i, j, x, y, maxlen, len;
 	int comp = 0;
-if(id == NUM_THREADS-1)
-		{
+	if(id == NUM_THREADS-1)
+	{
 			endPos = Lines_Read-1;
-}	
+	}
+			printf("node-%d processing from-%d to %d\n",id, currPos, endPos);
+			fflush(stdout);	
 	for (currPos = startPos; currPos < endPos; currPos++)
 	{
-		printf("%d\n", currPos);
-		fflush(stdout);	
+		
 			maxlen = 0;
 			length1 = strlen(File_Contents[currPos]);
 			length2 = strlen(File_Contents[currPos + 1]);
@@ -155,6 +157,22 @@ int init_Array(FILE * fp)
 int main(int argc, char *argv[])
 {
 
+	int process_number, rank;
+
+	MPI_Status Status;
+
+	//intialize mpi program; master/root is rank 0
+	int root = MPI_Init(&argc, &argv);
+	if (root != MPI_SUCCESS) {
+		printf("Error starting MPI program. Terminating.\n");
+		MPI_Abort(MPI_COMM_WORLD, root);
+	}
+
+	MPI_Comm_size(MPI_COMM_WORLD, &process_number);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	//determine the number of threads and set it
+NUM_THREADS = process_number;
+
 	struct timeval t1, t2;
 	double elapsedTime;
 	gettimeofday(&t1, NULL);
@@ -172,15 +190,13 @@ int main(int argc, char *argv[])
 	}
 	int input_lines = atoi(argv[2]);
 	Lines_Read = input_lines;
-
-	array_init(&File_Contents, input_lines, ARTICLE_SIZE);
-
-	int i=0;
-	init_Array(fp);
-
-	array_init(&LCS, input_lines-1, STRING_SIZE);
-	//process array in lcs function	
 	
+	//array_init(&File_Contents, input_lines, ARTICLE_SIZE);
+
+
+	//array_init(&LCS, input_lines-1, STRING_SIZE);
+	//process array in lcs function	
+/*	
 	int process_number, rank;
 
 	MPI_Status Status;
@@ -191,27 +207,38 @@ int main(int argc, char *argv[])
 		printf("Error starting MPI program. Terminating.\n");
 		MPI_Abort(MPI_COMM_WORLD, root);
 	}
-
 	MPI_Comm_size(MPI_COMM_WORLD, &process_number);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	//determine the number of threads and set it
 	NUM_THREADS = process_number;
-
-	array_init(&local_LCS, (input_lines/NUM_THREADS), STRING_SIZE);
+*/	
+	//if(rank == 0)
+	//{
+		array_init(&File_Contents, input_lines, ARTICLE_SIZE);
+		init_Array(fp);
 	
-	MPI_Bcast(File_Contents, input_lines*ARTICLE_SIZE, MPI_CHAR, 0, MPI_COMM_WORLD);	
+		array_init(&LCS, input_lines-1, STRING_SIZE);
+		array_init(&local_LCS, (input_lines/NUM_THREADS), STRING_SIZE);
+	//}
 
-	LCS_intermediate(rank, LCS);
+	int out = MPI_Bcast(File_Contents, (Lines_Read)*(ARTICLE_SIZE), MPI_CHAR, 0, MPI_COMM_WORLD);
+printf("%d - %d\n", out, rank);
+fflush(stdout);
+if(rank !=0)
+	LCS_intermediate(rank);
+
+
 	//print_results(LCS);
 	//When root process ends, terminate MPI
 printf("out of the alg");
 fflush(stdout);
+	MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Reduce(local_LCS, LCS, (input_lines-1)*500 , MPI_CHAR, MPI_SUM, 0, MPI_COMM_WORLD);	
 	printf("i got through the functions");
 	fflush(stdout);
 
 	GetProcessMemory(&myMemory);	
-	MPI_Barrier(MPI_COMM_WORLD);
+	//MPI_Barrier(MPI_COMM_WORLD);
 	if (rank == 0) {
 		print_results(LCS);
 		gettimeofday(&t2, NULL);
