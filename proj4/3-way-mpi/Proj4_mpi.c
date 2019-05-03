@@ -7,8 +7,8 @@
 #include "sys/sysinfo.h"
 #include <mpi.h>
 #include <math.h>
-#define ARTICLE_SIZE 10000
-#define STRING_SIZE 15
+#define ARTICLE_SIZE 2100
+#define STRING_SIZE 2100
 
 
 typedef struct {
@@ -24,6 +24,9 @@ void print_results(char ** LCS);
 void GetProcessMemory(processMem_t*);
 int parseLine(char *);
 
+int init_Array(FILE *);
+
+
 int NUM_THREADS;
 char** File_Contents;
 char ** local_LCS;
@@ -34,7 +37,8 @@ int Lines_Read;
 
 void LCS_intermediate(int id, char ** LCS ) 
 {
-
+printf("%d\n", id);
+fflush(stdout);
 	int startPos = (id) * (Lines_Read / NUM_THREADS);
 	int endPos = startPos + (Lines_Read / NUM_THREADS);
 	//int first_line = startPos;
@@ -46,10 +50,14 @@ void LCS_intermediate(int id, char ** LCS )
 	char substring[STRING_SIZE];
 	int i, j, x, y, maxlen, len;
 	int comp = 0;
-	
+if(id == NUM_THREADS-1)
+		{
+			endPos = Lines_Read-1;
+}	
 	for (currPos = startPos; currPos < endPos; currPos++)
 	{
-	
+		printf("%d\n", currPos);
+		fflush(stdout);	
 			maxlen = 0;
 			length1 = strlen(File_Contents[currPos]);
 			length2 = strlen(File_Contents[currPos + 1]);
@@ -72,8 +80,11 @@ void LCS_intermediate(int id, char ** LCS )
 						}
 						if (len > maxlen)
 						{
+							substring[len] = '\0';
 							maxlen = len;
 							strcpy(local_LCS[comp], substring);
+							printf("%s\n", local_LCS[comp]);
+							fflush(stdout);	
 						}
 					}
 				}
@@ -107,8 +118,6 @@ void array_init(char *** array, int row, int col) {
 	int i;
 	char * temp_array = (char *) malloc(row * col * sizeof(char));
 	(* array) = (char **) malloc(row * sizeof(char *));
-printf("is the problem before now?");
-fflush(stdout);
 	for (i = 0; i < row; i++) {
 		(*array)[i] = &(temp_array[i * col]);
 	}
@@ -124,6 +133,25 @@ void print_results(char ** LCS)
 	}
 }
 
+int init_Array(FILE * fp)
+{
+	int i = 0;
+	if (fp != NULL)
+	{
+		char line[ARTICLE_SIZE];
+		while (fgets(line, ARTICLE_SIZE, fp) != NULL  && i < Lines_Read)
+		{
+			strcpy(File_Contents[i], line);
+      			i++;
+ 	
+
+		}
+		fclose(fp);
+	}
+	return i;
+
+}
+
 int main(int argc, char *argv[])
 {
 
@@ -136,8 +164,6 @@ int main(int argc, char *argv[])
 		printf("Enter the filename followed by the number of lines\n");
 		return 0;
 	}
-printf("im in main");
-fflush(stdout);
 	processMem_t myMemory;
 	FILE * fp = fopen("/homes/dan/625/wiki_dump.txt", "r");       	//argv[1], "r");
 	if (fp == NULL) {
@@ -146,22 +172,11 @@ fflush(stdout);
 	}
 	int input_lines = atoi(argv[2]);
 	Lines_Read = input_lines;
-printf("read in the command line argument");
-fflush(stdout);
-	//read file into array
-	//array_init(&local_LCS, (input_lines/NUM_THREADS), STRING_SIZE);
 
 	array_init(&File_Contents, input_lines, ARTICLE_SIZE);
-printf("about to read in file");
-fflush(stdout);
+
 	int i=0;
-	while(i<input_lines)
-	{
-		if (ferror(fp) || feof(fp)) break;		
-		fgets(File_Contents[i], ARTICLE_SIZE, fp);
-		i++;
-	}
-	fclose(fp);
+	init_Array(fp);
 
 	array_init(&LCS, input_lines-1, STRING_SIZE);
 	//process array in lcs function	
@@ -181,7 +196,7 @@ fflush(stdout);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	//determine the number of threads and set it
 	NUM_THREADS = process_number;
-	
+
 	array_init(&local_LCS, (input_lines/NUM_THREADS), STRING_SIZE);
 	
 	MPI_Bcast(File_Contents, input_lines*ARTICLE_SIZE, MPI_CHAR, 0, MPI_COMM_WORLD);	
@@ -189,12 +204,16 @@ fflush(stdout);
 	LCS_intermediate(rank, LCS);
 	//print_results(LCS);
 	//When root process ends, terminate MPI
-
-	MPI_Reduce(local_LCS, LCS, input_lines*ARTICLE_SIZE, MPI_CHAR, MPI_SUM, 0, MPI_COMM_WORLD);	
+printf("out of the alg");
+fflush(stdout);
+	MPI_Reduce(local_LCS, LCS, (input_lines-1)*500 , MPI_CHAR, MPI_SUM, 0, MPI_COMM_WORLD);	
 	printf("i got through the functions");
 	fflush(stdout);
-	
+
+	GetProcessMemory(&myMemory);	
+	MPI_Barrier(MPI_COMM_WORLD);
 	if (rank == 0) {
+		print_results(LCS);
 		gettimeofday(&t2, NULL);
 		elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0; //sec to ms
 		elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0; // us to ms
@@ -203,10 +222,8 @@ fflush(stdout);
 		printf("Main: program completed. Exiting.\n");
 	}
 	//free the array
-	undoMalloc((int **)File_Contents, Lines_Read);
-  
-	GetProcessMemory(&myMemory);
-	MPI_Finalize();
+//	undoMalloc((int **)File_Contents, Lines_Read);
+  	MPI_Finalize();
 	return 0;
 }
 
