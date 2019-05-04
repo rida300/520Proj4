@@ -31,7 +31,7 @@ int NUM_THREADS;
 char File_Contents[LINES][ARTICLE_SIZE];
 //char File_ContentsSub[LINES][ARTICLE_SIZE];
 char ** local_LCS;
-char  LCS[LINES-1][STRING_SIZE];
+char  LCS [LINES-1][STRING_SIZE];
 
 
 
@@ -60,17 +60,23 @@ fflush(stdout);
 			maxlen = 0;
 			printf("before the strlen");fflush(stdout);
 			length1 = strlen(File_ContentsSub[currPos]);
-			printf("Read the file contents");
-			fflush(stdout);
+//			printf("Read the file contents");
+//			fflush(stdout);
 			length2 = strlen(File_ContentsSub[currPos + 1]);
 			for (i = 0; i <= length1; i++)
 			{
+//				printf("node-%d processing from-%d to %d\n", id, currPos, endPos);
+//				fflush(stdout);
 				for (j = 0; j <= length2; j++)
 				{
+		//			printf("i=%d    j=%d\n", i, j);
+		//			fflush(stdout);
 					if (File_ContentsSub[currPos][i] == File_ContentsSub[currPos + 1][j])
 					{
+					//	printf("in comparison\n");
+					//	fflush(stdout);
 						substring[0] = File_ContentsSub[currPos][i];
-					len = 1;
+						len = 1;
 						x = i + 1;
 						y = j + 1;
 						while (File_ContentsSub[currPos][x] == File_ContentsSub[currPos + 1][y] && x < length1 && y < length2 && len < STRING_SIZE)
@@ -81,11 +87,15 @@ fflush(stdout);
 							y++;
 						}
 						if (len > maxlen)
-						{
+						{	
+							printf("copying\n");
+							fflush(stdout);
 							substring[len] = '\0';
-							maxlen = len;
-							strcpy(local_LCS[comp], substring);
-							printf("%s\n", local_LCS[comp]);
+							printf("after null char\n");
+							fflush(stdout);	
+						maxlen = len;
+							strcpy(local_LCS[currPos], substring);
+							printf("%s\n", local_LCS[currPos]);
 							fflush(stdout);	
 						}
 					}
@@ -189,16 +199,18 @@ int main(int argc, char *argv[])
 
 	if(rank ==0)
 		init_Array(fp);
-
+	
 	char  File_ContentsSub[LINES/NUM_THREADS][ARTICLE_SIZE];
 
+
+	array_init(&local_LCS, (LINES/NUM_THREADS)-1,STRING_SIZE);
 //	int out = MPI_Bcast(File_Contents, (Lines_Read)*(ARTICLE_SIZE), MPI_CHAR, 0, MPI_COMM_WORLD);
 //printf("%d - %d\n", out, rank);
 //fflush(stdout);
 
-	MPI_Scatter(File_Contents, (LINES/NUM_THREADS)*ARTICLE_SIZE, MPI_CHAR, File_ContentsSub, (LINES/NUM_THREADS)*ARTICLE_SIZE,MPI_CHAR, 0, MPI_COMM_WORLD);
-printf("node-%d line1=%s\n", rank, File_ContentsSub[0]);
-fflush(stdout);
+	MPI_Scatter(File_Contents, (LINES/(NUM_THREADS))*ARTICLE_SIZE, MPI_CHAR, File_ContentsSub, (LINES/(NUM_THREADS))*ARTICLE_SIZE,MPI_CHAR, 0, MPI_COMM_WORLD);
+//printf("node-%d line1=%s\n", rank, File_ContentsSub[0]);
+//fflush(stdout);
 
 
 if(rank != 0)
@@ -210,8 +222,8 @@ if(rank != 0)
 printf("out of the alg");
 fflush(stdout);
 	MPI_Barrier(MPI_COMM_WORLD);
-	MPI_Reduce(local_LCS, LCS, (LINES-1) , MPI_CHAR, MPI_SUM, 0, MPI_COMM_WORLD);//change this to gather	
-	printf("i got through the functions");
+	MPI_Gather(local_LCS, (LINES/NUM_THREADS)*ARTICLE_SIZE, MPI_CHAR, LCS, (LINES/NUM_THREADS)*ARTICLE_SIZE , MPI_CHAR, 0, MPI_COMM_WORLD);//change this to gather	
+	printf("%s\n%s\n", LCS[50],LCS[75]);
 	fflush(stdout);
 
 	GetProcessMemory(&myMemory);	
