@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
 	double elapsedTime;
 	gettimeofday(&t1, NULL);
 
-	if (argc != 2)
+	if (argc != 3)
 	{
 		printf("Enter the filename followed by the number of lines\n");
 		return 0;
@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
 		printf("File not found \n");
 		return 0;
 	}
-	int input_lines = atol(argv[1]);
+	int input_lines = atol(argv[2]);
 	Lines_Read = input_lines;
 	//read file into array
 
