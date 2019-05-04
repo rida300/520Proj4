@@ -10,7 +10,7 @@
 #define ARTICLE_SIZE 10000
 #define STRING_SIZE 15
 
-
+  
 typedef struct {
   uint32_t virtualMem;
   uint32_t physicalMem;
