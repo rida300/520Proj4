@@ -7,8 +7,8 @@
 #include "sys/sysinfo.h"
 #include <mpi.h>
 #include <math.h>
-#define ARTICLE_SIZE 2000
-#define STRING_SIZE 2000
+#define ARTICLE_SIZE 2100
+#define STRING_SIZE 2100
 #define LINES 250000
 
 typedef struct {
@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
 		elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0; //sec to ms
 		elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0; // us to ms
 		printf("%s, %f\n", getenv("SLURM_CPUS_ON_NODE"), elapsedTime);
-	  	printf("DATA, %d, %u, %u\n", NUM_THREADS, myMemory.virtualMem, myMemory.physicalMem);
+	  	printf("DATA, %s, %d, %d, %u, %u %d\n", getenv("SLURM_CPUS_ON_NODE"), elapsedTime, NUM_THREADS, myMemory.virtualMem, myMemory.physicalMem, LINES);
 		printf("Main: program completed. Exiting.\n");
 	}
 	
