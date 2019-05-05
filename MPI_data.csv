@@ -1,0 +1,33 @@
+Binary file pc6/520Proj4/proj4/3-way-mpi/mpi matches
+pc6/520Proj4/proj4/3-way-mpi/slurm-3470157.out:DATA, 2, 406172, 33720
+pc6/520Proj4/proj4/3-way-mpi/slurm-3470207.out:DATA, 2, 406224, 33868
+pc6/520Proj4/proj4/3-way-mpi/slurm-3470294.out:DATA, 2, 406328, 33900
+pc6/520Proj4/proj4/3-way-mpi/slurm-3460749.out:DATA, 1, 385292, 12748
+pc6/520Proj4/proj4/3-way-mpi/slurm-3470211.out:DATA, 2, 406224, 33876
+pc6/520Proj4/proj4/3-way-mpi/slurm-3460629.out:DATA, 1, 385292, 12716
+pc6/520Proj4/proj4/3-way-mpi/Proj4_mpi.c.save:  	printf("DATA, %d, %u, %u\n", NUM_THREADS, myMemory.virtualMem, myMemory.physicalMem);
+pc6/520Proj4/proj4/3-way-mpi/slurm-3470098.out:DATA, 0, 406168, 33840
+pc6/520Proj4/proj4/3-way-mpi/slurm-3470100.out:DATA, 0, 406168, 33840
+pc6/520Proj4/proj4/3-way-mpi/slurm-3470133.out:DATA, 2, 406172, 33684
+pc6/520Proj4/proj4/3-way-mpi/slurm-3470214.out:DATA, 2, 406328, 33868
+pc6/520Proj4/proj4/3-way-mpi/slurm-3470291.out:DATA, 2, 406332, 33868
+pc6/520Proj4/proj4/3-way-mpi/slurm-3474003.out:DATA, 2, 406668, 34220
+pc6/520Proj4/proj4/3-way-mpi/slurm-3474005.out:DATA, 4, 1205856, 680100
+pc6/520Proj4/proj4/3-way-mpi/slurm-3470094.out:DATA, 2, 406172, 33680
+pc6/520Proj4/proj4/3-way-mpi/slurm-3470297.out:DATA, 2, 406332, 33900
+pc6/520Proj4/proj4/3-way-mpi/slurm-3460630.out:DATA, 1, 385292, 12716
+pc6/520Proj4/proj4/3-way-mpi/slurm-3474031.out:DATA, 4, 1070204, 544388
+pc6/520Proj4/proj4/3-way-mpi/Proj4_mpi_temp.c:		printf("DATA, %d, %s, %f\n", myVersion, getenv("SLURM_CPUS_ON_NODE"),  elapsedTime);
+pc6/520Proj4/proj4/3-way-mpi/slurm-3470295.out:DATA, 2, 406328, 33892
+pc6/520Proj4/proj4/3-way-mpi/slurm-3471126.out:DATA, 2, 406328, 33892
+pc6/520Proj4/proj4/3-way-mpi/Proj4_mpi.c:	  	printf("DATA, %d, %u, %u\n", NUM_THREADS, myMemory.virtualMem, myMemory.physicalMem);
+pc6/520Proj4/proj4/3-way-mpi/slurm-3470213.out:DATA, 2, 406224, 33872
+pc6/520Proj4/proj4/3-way-mpi/slurm-3470299.out:DATA, 2, 406332, 33892
+pc6/520Proj4/proj4/3-way-mpi/slurm-3460609.out:DATA, 1, 384676, 12288
+pc6/520Proj4/proj4/3-way-mpi/Proj4_mpi_test.c:  	printf("DATA, %d, %u, %u\n", NUM_THREADS, myMemory.virtualMem, myMemory.physicalMem);
+pc6/520Proj4/proj4/3-way-mpi/slurm-3470089.out:DATA, 2, 406168, 9284
+pc6/520Proj4/proj4/3-way-mpi/slurm-3460610.out:DATA, 1, 385292, 12748
+pc6/520Proj4/proj4/3-way-mpi/Proj4_mpi2.c:  	printf("DATA, %d, %u, %u\n", NUM_THREADS, myMemory.virtualMem, myMemory.physicalMem);
+pc6/520Proj4/proj4/3-way-mpi/slurm-3470292.out:DATA, 2, 406328, 33892
+pc6/520Proj4/proj4/3-way-mpi/slurm-3470097.out:DATA, 0, 406172, 33848
+pc6/520Proj4/proj4/3-way-mpi/slurm-3460623.out:DATA, 1, 385292, 12712
