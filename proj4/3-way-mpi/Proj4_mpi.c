@@ -9,7 +9,7 @@
 #include <math.h>
 #define ARTICLE_SIZE 2000
 #define STRING_SIZE 2000
-#define LINES 500000
+#define LINES 250000
 
 typedef struct {
   uint32_t virtualMem;
@@ -94,7 +94,7 @@ if(id == 0){
 			z++;
 
 		}
-		free(local_LCS);
+		//free(local_LCS);
 	}
 
 		
@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
 
 	LCS_intermediate(rank);//, File_ContentsSub);
 	MPI_Barrier(MPI_COMM_WORLD);
-	free(File_Contents);
+	//free(File_Contents);
 	int start = rank * LINES/NUM_THREADS;
 	int end = start + LINES/NUM_THREADS-1;
 
